@@ -11,7 +11,7 @@ This is an l1-irls c++ implementation
 ## Dependencies
 
  - l1-irls
- - opencv
+ - opencv3
  - Boost (Filesystem)
 
  In Mac: 
