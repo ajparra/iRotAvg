@@ -31,8 +31,8 @@ Then make sure you are able to compile and execute l1_irls. Follow the l1_irls's
 (binary is compiled inside src)
 
 ## Config
-You can test linfslam with the maptek dataset. The dataset is here:
-(external hhd for now...)
+You can test linfslam with the maptek dataset:
+https://universityofadelaide.box.com/s/b9vwelbfu64f3j0m48p6aetfaywm6u3l
 
 
 There is a yaml configuration file here
