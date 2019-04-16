@@ -1,0 +1,77 @@
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/l1_irls/cmake")
+include(UpdateCacheVariable)
+
+
+find_package(Boost COMPONENTS filesystem REQUIRED)
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+
+message( "XXXXXXX Eigen inc dirs:    ${Eigen3_INCLUDE_DIRS} ppp" )
+
+find_package(opencv 3.4 REQUIRED)
+find_package(SuiteSparse)
+
+if (SUITESPARSE_FOUND)
+    # On Ubuntu the system install of SuiteSparse (v3.4.0) up to at least
+    # Ubuntu 13.10 cannot be used to link shared libraries.
+    if (BUILD_SHARED_LIBS AND
+        SUITESPARSE_IS_BROKEN_SHARED_LINKING_UBUNTU_SYSTEM_VERSION)
+
+        message(FATAL_ERROR "You are attempting to build Ceres as a shared "
+        "library on Ubuntu using a system package install of SuiteSparse "
+        "3.4.0. This package is broken and does not support the "
+        "construction of shared libraries (you can still build Ceres as "
+        " a static library).  If you wish to build a shared version of Ceres "
+        "you should uninstall the system install of SuiteSparse "
+        "(libsuitesparse-dev) and perform a source install of SuiteSparse "
+        "(we recommend that you use the latest version), "
+        "see http://ceres-solver.org/building.html for more information.")
+    endif (BUILD_SHARED_LIBS AND
+        SUITESPARSE_IS_BROKEN_SHARED_LINKING_UBUNTU_SYSTEM_VERSION)
+
+        message("-- Found SuiteSparse ${SUITESPARSE_VERSION}, "
+        "building with SuiteSparse.")
+else (SUITESPARSE_FOUND)
+    message(FATAL_ERROR "Unable to find SuiteSparse!")
+endif (SUITESPARSE_FOUND)
+
+
+
+link_directories( ${SUITESPARSE_LIBRARY_DIR_HINTS} )
+
+add_executable( linfslam main
+    ${PROJECT_SOURCE_DIR}/l1_irls/l1_irls
+    ${PROJECT_SOURCE_DIR}/third_party/DBoW2/DBoW2/FeatureVector
+    ${PROJECT_SOURCE_DIR}/third_party/DBoW2/DBoW2/BowVector
+    ${PROJECT_SOURCE_DIR}/third_party/DBoW2/DBoW2/ScoringObject
+    ${PROJECT_SOURCE_DIR}/third_party/DBoW2/DBoW2/FORB
+    ${PROJECT_SOURCE_DIR}/third_party/DBoW2/DUtils/Timestamp
+    ${PROJECT_SOURCE_DIR}/third_party/DBoW2/DUtils/Random
+    ORBVocabulary
+    FeatureTracker
+    SequenceLoader
+    Frame
+    View
+    Camera
+    ORBExtractor
+    SIFTExtractor
+    Pose
+    Converter
+)
+
+target_include_directories( linfslam PUBLIC
+    ${Eigen3_INCLUDE_DIRS}
+    ${SUITESPARSE_INCLUDE_DIRS}
+    ${OpenCV_INCLUDE_DIRS}
+    ${PROJECT_SOURCE_DIR}/third_party/DBoW2/DBoW2/
+    ${PROJECT_SOURCE_DIR}/l1_irls/
+)
+
+target_link_libraries (linfslam
+    Eigen3::Eigen
+    ${SUITESPARSE_LIBRARIES} umfpack
+    ${OpenCV_LIBRARIES}
+    ${Boost_FILESYSTEM_LIBRARY} )
+
+
+message( "OpenCV_LIBRARIES    ${OpenCV_LIBRARIES}" )
+

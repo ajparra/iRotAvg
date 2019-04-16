@@ -32,7 +32,7 @@ void config(const std::string &filename)
     cv::FileStorage settings(filename.c_str(), cv::FileStorage::READ);
     if(!settings.isOpened())
     {
-        std::cerr << "Failed to open settings file at: " << filename << std::endl;
+        std::cerr << "Failed to open settings file: " << filename << std::endl;
         std::exit(-1);
     }
     
@@ -91,7 +91,7 @@ void config(const std::string &filename)
     int min_th_FAST = settings["ORBextractor.minThFAST"];
     
     orb_extractor = new ORB_SLAM2::ORBextractor(n_features,scale_factor,
-                                            n_levels,ini_th_FAST,min_th_FAST);
+                                                n_levels,ini_th_FAST,min_th_FAST);
     
     //--------------------------------------------------------------------------------------------
     // ORB Vocabulary
@@ -102,28 +102,52 @@ void config(const std::string &filename)
 }
 
 
-int main(int argc, const char * argv[]) {
-    std::string config_filename = "/Users/a1613915/dataset/maptek/LeftCam/config.yaml";
-    std::string sequence_path = "/Users/a1613915/dataset/maptek/LeftCam/2-loops-clockwise/";
-    std::string image_ext = ".tif";
-    int timestamp_offset = 25; //cam144_2017-03-16-154907-1803.tif
+int main(int argc, const char * argv[])
+{
+    const cv::String keys =
+    "{help h usage ?   |      | print this message     }"
+    "{@config          |<none>| config file            }"
+    "{@sequence_path   |<none>| path to images         }"
+    "{image_ext        |.tif  | image extension        }"
+    "{timestamp_offset |25    | image's name timestamp }"
+    "{gt               |      | ground truth           }"
+    ;
     
-    config(config_filename);
+    cv::CommandLineParser parser(argc, argv, keys);
     
-    std::cout<< "K:\n";
-    std::cout<< cam_pars.intrinsic() << std::endl;
-    
-    std::cout<< "dist coefs:\n";
-    std::cout<< cam_pars.dist_coef() << std::endl;
-    
-    SequenceLoader loader(sequence_path, image_ext, timestamp_offset);
-    
-    FeatureTracker tracker(orb_extractor->GetScaleSigmaSquares());
-    
-    //read GT
-    std::vector<Pose::Mat3> gt_rots;
+    parser.about("linfslam v0.0.1");
+    parser.printMessage();
+    if (parser.has("help"))
     {
-        string gt_file = "maptek_gt.txt";
+        parser.printMessage();
+        return 0;
+    }
+    
+    const std::string config_filename( parser.get<cv::String>(0) );     // /Users/a1613915/dataset/maptek/LeftCam/config.yaml
+    const std::string sequence_path( parser.get<cv::String>(1) );       // /Users/a1613915/dataset/maptek/LeftCam/2-loops-clockwise/
+    const std::string image_ext( parser.get<cv::String>("image_ext") );          //".tif";
+    const int timestamp_offset = parser.get<int>("timestamp_offset");           //25; //cam144_2017-03-16-154907-1803.tif
+    
+    bool gt_provided = parser.has("gt");
+    std::string gt_file;
+    if (gt_provided)
+    {
+        gt_file = parser.get<cv::String>("gt");
+    }
+    
+    if (!parser.check())
+    {
+        parser.printErrors();
+        return 0;
+    }
+    
+    // ----------------------------------------------
+    // read GT
+    // ----------------------------------------------
+    std::vector<Pose::Mat3> gt_rots;
+    if (gt_provided)
+    {
+        //string gt_file = "maptek_gt.txt";
         std::ifstream myfile (gt_file);
         if (!myfile.is_open())
         {
@@ -142,6 +166,23 @@ int main(int argc, const char * argv[]) {
         }
         myfile.close();
     }
+    
+    
+    
+    
+    config(config_filename);
+    
+    std::cout<< "K:\n";
+    std::cout<< cam_pars.intrinsic() << std::endl;
+    
+    std::cout<< "dist coefs:\n";
+    std::cout<< cam_pars.dist_coef() << std::endl;
+    
+    SequenceLoader loader(sequence_path, image_ext, timestamp_offset);
+    
+    FeatureTracker tracker(orb_extractor->GetScaleSigmaSquares());
+    
+   
     
     
     bool is_camera_init = false; //flag for camera initialization
