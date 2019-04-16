@@ -30,13 +30,21 @@ Then make sure you are able to compile and execute l1_irls. Follow the l1_irls r
 
 (binary is compiled inside src)
 
+## Config
+You can test linfslam with the maptek dataset. The dataset is here:
+(external hhd for now...)
+
+
+There is a yaml configuration file here
+maptek_dataset/LeftCam/config.yaml
+
+Download and uncompress the orb vocabulary file from here
+https://github.com/raulmur/ORB_SLAM2/tree/master/Vocabulary
+
+Edit the path for the orb vocabulary in the configuration file.
+
+
 ## Execution
-To see usage simply excecute
 
-./linfslam config.yaml sequence_path
-
-An example is provided in the folder data. To test the method you can
-run
-
-./linfslam ../data/ravg_input.txt
+./linfslam path/to/config.yaml path/to/sequence_path
 
