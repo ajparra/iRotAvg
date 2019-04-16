@@ -21,7 +21,7 @@ This is an l1-irls c++ implementation
 ## Compilation
 
 First download and copy the l1-irls project into the linfslam project's directory.
-Then make sure you are able to compile and execute l1_irls. Follow the l1_irls readme for instructions.
+Then make sure you are able to compile and execute l1_irls. Follow the l1_irls's readme for instructions.
 
 - mkdir build
 - cd build
