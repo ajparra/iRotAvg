@@ -17,6 +17,10 @@ This is an l1-irls c++ implementation
  In Mac: 
  - brew install boost
  - brew install opencv3
+ 
+ In ubuntu:
+ - sudo apt-get install libboost-all-dev
+ For OpenCV wise, https://www.pyimagesearch.com/2018/05/28/ubuntu-18-04-how-to-install-opencv/ provides a good guide. The requirement for this code is OpenCV 3.4.
 
 ## Compilation
 
@@ -45,6 +49,6 @@ Edit the path for the orb vocabulary in the configuration file.
 
 
 ## Execution
-
+cd ../src
 ./linfslam path/to/config.yaml path/to/sequence_path
 
