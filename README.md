@@ -49,6 +49,6 @@ Edit the path for the orb vocabulary in the configuration file.
 
 
 ## Execution
-cd ../src
+cd src
 ./linfslam path/to/config.yaml path/to/sequence_path
 
