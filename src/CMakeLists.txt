@@ -5,9 +5,7 @@ include(UpdateCacheVariable)
 find_package(Boost COMPONENTS filesystem REQUIRED)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
-message( "XXXXXXX Eigen inc dirs:    ${Eigen3_INCLUDE_DIRS} ppp" )
-
-find_package(opencv 3.4 REQUIRED)
+find_package(OpenCV 3.4 REQUIRED)
 find_package(SuiteSparse)
 
 if (SUITESPARSE_FOUND)
@@ -70,8 +68,6 @@ target_link_libraries (linfslam
     Eigen3::Eigen
     ${SUITESPARSE_LIBRARIES} umfpack
     ${OpenCV_LIBRARIES}
-    ${Boost_FILESYSTEM_LIBRARY} )
-
-
-message( "OpenCV_LIBRARIES    ${OpenCV_LIBRARIES}" )
+    ${Boost_FILESYSTEM_LIBRARY} 
+    -lboost_system)
 
