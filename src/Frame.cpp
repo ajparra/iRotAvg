@@ -222,10 +222,10 @@ void Frame::computeBoW()
     if(m_bow.empty() || m_bow_features.empty())
     {
         ORBVocabulary &orb_vocab = ORBVocabulary::instance();
-        auto &vacab = orb_vocab.vocabulary();
+        auto &vocab = orb_vocab.vocabulary();
         
         std::vector<cv::Mat> descriptors = Converter::descriptorsMatToVector(m_descriptors);
         // Feature vector associate features with nodes in the 4th level (from leaves up)
-        vacab.transform(descriptors, m_bow, m_bow_features, ORB_VOCAB_LEVELS);
+        vocab.transform(descriptors, m_bow, m_bow_features, ORB_VOCAB_LEVELS);
     }
 }

@@ -14,6 +14,9 @@
 #include "Frame.hpp"
 #include "Pose.hpp"
 
+#include <functional>   // std::greater
+#include <algorithm>    // std::sort
+
 
 namespace linf
 {
@@ -33,6 +36,7 @@ public:
         {}
         
         FeatureMatches &matches() { return m_matches; }
+        size_t size() const { return m_matches.size(); }
         const Pose &pose() const { return m_rel_pose; } 
         
     private:
@@ -71,6 +75,50 @@ public:
     static bool connect(View &v1, View &v2, FeatureMatches matches, Pose rel_pose);
     
     //TODO: implement the desctructor, to clean the theap...
+    
+    
+    
+    std::vector<View*> getBestCovisibilityViews(const int n)
+    {
+
+        typedef std::pair<int, View*> WeightedView;
+        
+        std::vector<WeightedView> weighted_views;
+        for (auto connection: m_connections)
+        {
+            View *view = connection.first;
+            ViewConnection *view_connection = connection.second;
+            
+            // check there is no null elements in connections!!!
+            assert(view != NULL);
+            assert(view_connection != NULL);
+            
+            weighted_views.push_back( std::make_pair( (int)view_connection->size(), view) );
+        }
+        
+        // sort by the number of connections in descending order
+        std::sort(weighted_views.begin(), weighted_views.end(),
+                  [](const WeightedView &x, const WeightedView &y) //TODO: fix x is becames null??? why???
+                  {
+                      return x.first > y.first;
+                  }
+                  );
+        
+        std::vector<View*> covisibility;
+        covisibility.reserve(n);
+        
+        int i = 0;
+        for (auto wv: weighted_views)
+        {
+            if (i++==n) break;
+
+            covisibility.push_back(wv.second);
+        }
+        
+        return covisibility;
+    }
+    
+    
     
 private:
     

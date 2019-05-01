@@ -28,8 +28,7 @@ namespace linf
     {
     public:
         
-        typedef DBoW2::TemplatedVocabulary<DBoW2::FORB::TDescriptor, DBoW2::FORB>
-        Vocabulary;
+        typedef DBoW2::TemplatedVocabulary<DBoW2::FORB::TDescriptor, DBoW2::FORB> Vocabulary;
         
         ORBVocabulary(ORBVocabulary const&) = delete;
         

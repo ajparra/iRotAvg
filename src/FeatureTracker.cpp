@@ -7,15 +7,15 @@
 //
 
 #include "FeatureTracker.hpp"
+#include "ViewDatabase.hpp"
 
 #include <ctime> // time_t
 
 #define HISTO_LENGTH 30
-//#define TH_LOW 70
 #define TH_LOW 80
+//#define TH_LOW 80
 
 #define PLOT true
-//#define TH_LOW 256
 
 using namespace linf;
 
@@ -74,14 +74,14 @@ void computeThreeMaxima(std::vector<int> *histo, const int L, int &ind1, int &in
         }
     }
     
-    if(max2<0.1f*(float)max1)
+    if(max2 < 0.1f*(float)max1)
     {
-        ind2=-1;
-        ind3=-1;
+        ind2 = -1;
+        ind3 = -1;
     }
-    else if(max3<0.1f*(float)max1)
+    else if(max3 < 0.1f*(float)max1)
     {
-        ind3=-1;
+        ind3 = -1;
     }
 }
 
@@ -104,6 +104,178 @@ int descriptorDistance(const cv::Mat &a, const cv::Mat &b)
 }
 
 
+
+int FeatureTracker::findORBMatchesByBoW(Frame &f1, Frame &f2,
+                                        std::vector<std::pair<int,int> > &matched_pairs,
+                                        const double nnratio) const
+{
+    bool check_orientation = true;
+    
+    const auto &keypoints1 = f1.undistortedKeypoints();
+    const auto &keypoints2 = f2.undistortedKeypoints();
+    const auto &descriptors1 = f1.descriptors();
+    const auto &descriptors2 = f2.descriptors();
+    const auto &bow_features1 = f1.bow_features();
+    const auto &bow_features2 = f2.bow_features();
+    
+    const int n1 = (int)keypoints1.size();
+    //const int n2 = (int)keypoints2.size();
+    
+    //const vector<MapPoint*> vpMapPointsKF = pKF->GetMapPointMatches();
+    
+    int n_matches = 0;
+    
+    //vpMapPointMatches = vector<MapPoint*>(F.N,static_cast<MapPoint*>(NULL));
+    std::vector<int> matches12(n1,-1);
+    //std::vector<bool> matched2(n2,false);
+
+    //const DBoW2::FeatureVector &vFeatVecKF = pKF->mFeatVec;
+    
+    
+    std::vector<int> rotHist[HISTO_LENGTH];
+    
+    for(int i=0;i<HISTO_LENGTH;i++)
+        rotHist[i].reserve(500);
+
+    const float factor = 1.0f/HISTO_LENGTH;
+        
+    // We perform the matching over ORB that belong to the same vocabulary node (at a certain level)
+    
+    
+    DBoW2::FeatureVector::const_iterator it1 = bow_features1.begin();
+    DBoW2::FeatureVector::const_iterator it2 = bow_features2.begin();
+    DBoW2::FeatureVector::const_iterator end1 = bow_features1.end();
+    DBoW2::FeatureVector::const_iterator end2 = bow_features2.end();
+    
+    while(it1!=end1 && it2!=end2)
+    {
+        if(it1->first == it2->first)
+        {
+            //const vector<unsigned int> vIndicesKF = KFit->second;
+            //const vector<unsigned int> vIndicesF = Fit->second;
+            
+            //for(size_t iKF=0; iKF<vIndicesKF.size(); iKF++)
+            for(size_t i1=0, iend1=it1->second.size(); i1<iend1; i1++)
+            {
+                //const unsigned int realIdxKF = vIndicesKF[iKF];
+                const int idx1 = it1->second[i1];
+                const cv::KeyPoint &kp1 = keypoints1[idx1];
+                const cv::Mat &d1 = descriptors1.row(idx1);
+                
+//                MapPoint* pMP = vpMapPointsKF[realIdxKF];
+//                if(!pMP)
+//                    continue;
+                //const cv::Mat &dKF= pKF->mDescriptors.row(realIdxKF);
+                
+                int best_dist1 = 256;
+                int best_idx2  = -1 ;
+                int best_dist2 = 256;
+                
+                //for(size_t iF=0; iF<vIndicesF.size(); iF++)
+                for(size_t i2=0, iend2=it2->second.size(); i2<iend2; i2++)
+                {
+                    //const unsigned int realIdxF = vIndicesF[iF];
+                    const int idx2 = it2->second[i2];
+
+                    //TODO: check this condition!!!
+//                    if(vpMapPointMatches[idx2])
+//                        continue;
+                    if (matches12[idx2]>-1)
+                    {
+                        continue;
+                    }
+                    
+                    const cv::Mat &d2 = descriptors2.row(idx2);
+                    const int dist = descriptorDistance(d1, d2);
+                    
+                    
+                    if(dist < best_dist1)
+                    {
+                        best_dist2 = best_dist1;
+                        best_dist1 = dist;
+                        best_idx2 = idx2;
+                    }
+                    else if(dist < best_dist2)
+                    {
+                        best_dist2 = dist;
+                    }
+                }
+                
+                if(best_dist1 <= TH_LOW)
+                {
+                    const cv::KeyPoint &kp2 = keypoints2[best_idx2];
+                    
+                    if( best_dist1 < nnratio*best_dist2 )
+                    {
+                        //vpMapPointMatches[bestIdxF]=pMP;
+                        matches12[idx1] = best_idx2;
+                        //const cv::KeyPoint &kp = pKF->mvKeysUn[realIdxKF];
+                        
+                        if(check_orientation)
+                        {
+                            double rot = kp1.angle - kp2.angle;
+                            if(rot < 0.0)
+                                rot += 360.0f;
+                            int bin = round(rot*factor);
+                            if(bin == HISTO_LENGTH)
+                                bin = 0;
+                            assert(bin>=0 && bin<HISTO_LENGTH);
+                            rotHist[bin].push_back(best_idx2);
+                        }
+                        n_matches++;
+                    }
+                }
+            }
+            
+            it1++;
+            it2++;
+        }
+        else if(it1->first < it2->first)
+        {
+            it1 = bow_features1.lower_bound(it2->first);
+        }
+        else
+        {
+            it2 = bow_features2.lower_bound(it1->first);
+        }
+    }
+    
+    
+    if(check_orientation)
+    {
+        int ind1 = -1;
+        int ind2 = -1;
+        int ind3 = -1;
+        
+        computeThreeMaxima(rotHist,HISTO_LENGTH,ind1,ind2,ind3);
+        
+        for(int i=0; i<HISTO_LENGTH; i++)
+        {
+            if(i==ind1 || i==ind2 || i==ind3)
+                continue;
+            for(size_t j=0, jend=rotHist[i].size(); j<jend; j++)
+            {
+                matches12[rotHist[i][j]]=-1;
+                n_matches--;
+            }
+        }
+    }
+    
+    matched_pairs.clear();
+    matched_pairs.reserve(n_matches);
+    
+    for(size_t i=0, iend=matches12.size(); i<iend; i++)
+    {
+        if(matches12[i]<0)
+            continue;
+        matched_pairs.push_back(make_pair(i,matches12[i]));
+    }
+    
+    return n_matches;
+}
+
+
+
 //int findORBMatches(Frame &f1, Frame &f2,
 //std::vector<cv::Point2f> &prev_matched,
 //std::vector<int> &matches12,
@@ -123,18 +295,18 @@ int FeatureTracker::findORBMatches(Frame &f1, Frame &f2,
     const auto &bow_features2 = f2.bow_features();
     
     const int n1 = (int)keypoints1.size();
-    const int n2 = (int)keypoints2.size();
+    //const int n2 = (int)keypoints2.size();
     
     // Find matches between not tracked keypoints
     // Matching speed-up by ORB Vocabulary
     // Compare only ORB that share the same node
     
     int n_matches = 0;
-    std::vector<bool> matched2(n2,false);
+    //std::vector<bool> matched2(n2,false);
     std::vector<int> matches12(n1,-1);
     
     std::vector<int> rotHist[HISTO_LENGTH];
-    for(int i=0;i<HISTO_LENGTH;i++)
+    for(int i=0; i<HISTO_LENGTH; i++)
         rotHist[i].reserve(500);
     
     const float factor = 1.0f/HISTO_LENGTH;
@@ -151,7 +323,6 @@ int FeatureTracker::findORBMatches(Frame &f1, Frame &f2,
             for(size_t i1=0, iend1=it1->second.size(); i1<iend1; i1++)
             {
                 const int idx1 = it1->second[i1];
-                
                 const cv::KeyPoint &kp1 = keypoints1[idx1];
                 const cv::Mat &d1 = descriptors1.row(idx1);
                 
@@ -160,16 +331,21 @@ int FeatureTracker::findORBMatches(Frame &f1, Frame &f2,
                 
                 for(size_t i2=0, iend2=it2->second.size(); i2<iend2; i2++)
                 {
-                    int idx2 = it2->second[i2];
+                    const int idx2 = it2->second[i2];
                     
                     // If we have already matched or there is a MapPoint skip
+                    //TODO: check this condition!!!
 //                    if(vbMatched2[idx2] || pMP2)
 //                        continue;
+                    if (matches12[idx2]>-1)
+                    {
+                        continue;
+                    }
                     
                     const cv::Mat &d2 = descriptors2.row(idx2); // I think & really make any difference here...
                     const int dist = descriptorDistance(d1,d2);
                     
-                    if(dist>TH_LOW || dist>bestDist)
+                    if(dist > TH_LOW || dist > bestDist)
                         continue;
                     
                     const cv::KeyPoint &kp2 = keypoints2[idx2];
@@ -181,20 +357,20 @@ int FeatureTracker::findORBMatches(Frame &f1, Frame &f2,
                     }
                 }
                 
-                if(bestIdx2>=0)
+                if(bestIdx2 >= 0)
                 {
                     const cv::KeyPoint &kp2 = keypoints2[bestIdx2];
-                    matches12[idx1]=bestIdx2;
+                    matches12[idx1] = bestIdx2;
                     n_matches++;
                     
                     if(check_orientation)
                     {
-                        float rot = kp1.angle-kp2.angle;
-                        if(rot<0.0)
-                            rot+=360.0f;
+                        double rot = kp1.angle - kp2.angle;
+                        if(rot < 0.0)
+                            rot += 360.0f;
                         int bin = round(rot*factor);
-                        if(bin==HISTO_LENGTH)
-                            bin=0;
+                        if(bin == HISTO_LENGTH)
+                            bin = 0;
                         assert(bin>=0 && bin<HISTO_LENGTH);
                         rotHist[bin].push_back(idx1);
                     }
@@ -231,7 +407,6 @@ int FeatureTracker::findORBMatches(Frame &f1, Frame &f2,
                 n_matches--;
             }
         }
-        
     }
     
     matched_pairs.clear();
@@ -254,7 +429,7 @@ int findORBMatchesLocally(Frame &f1, Frame &f2,
                           const int window_size, const double nnratio)
 {
     bool const check_orientation = false;
-    int n_matches=0;
+    int n_matches = 0;
     
     auto &points1 = f1.undistortedKeypoints();
     auto &points2 = f2.undistortedKeypoints();
@@ -385,7 +560,7 @@ int findORBMatchesLocally(Frame &f1, Frame &f2,
 int findCurr2PrevLocalMatches(Frame &curr, Frame &prev,
                               std::vector<int> &target, const int rad = 100)
 {
-    const double nnratio = .8  ; //.9;
+    const double nnratio = .9; //1.0  ; //.8 .9;
 
     auto &curr_points = curr.undistortedKeypoints();
     const int n_curr_points = (int)curr_points.size();
@@ -407,10 +582,14 @@ int findCurr2PrevLocalMatches(Frame &curr, Frame &prev,
 }
 
 
-Pose findRelativePose(Frame &f1, Frame &f2, FeatureMatches &matches,
-                      int &n_epi_inlrs, cv::Mat &mask, cv::Mat &E, double th)
+Pose FeatureTracker::findRelativePose(Frame &f1, Frame &f2,
+                                      FeatureMatches &matches,
+                                      int &n_cheirality, cv::Mat &mask, cv::Mat &E,
+                                      double th) const
 {
     //https://docs.opencv.org/3.0-beta/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html
+    
+    assert(matches.size()>4);
     
     const auto &kps1 = f1.undistortedKeypoints();
     const auto &kps2 = f2.undistortedKeypoints();
@@ -433,22 +612,25 @@ Pose findRelativePose(Frame &f1, Frame &f2, FeatureMatches &matches,
     const double focal = cam_pars.f();
     const cv::Point2d pp = cam_pars.pp();
     
-    E = cv::findEssentialMat(points1, points2, focal, pp, cv::RANSAC, 0.999, th, mask);
+    E = cv::findEssentialMat(points1, points2,
+                             focal, pp, cv::RANSAC, 0.999, th, mask);
     
     int n_rsc_inlrs = 0;
     const uchar* mask_ptr = mask.ptr<uchar>(0);
     for (int i=0; i<mask.rows; i++)
         n_rsc_inlrs += mask_ptr[i];
     
-    if (n_rsc_inlrs)
+    if (n_rsc_inlrs>6) // is 5 the min num of pts ?
     {
         cv::Mat R, t;
-        n_epi_inlrs = cv::recoverPose(E, points1, points2, R, t, focal, pp, mask);
+        //int n_cheirality;
+        //cv::Mat mask_pose = mask.clone();
+        n_cheirality = cv::recoverPose(E, points1, points2, R, t, focal, pp, mask);
         return Pose(R,t);
     }
     else
     {
-        n_epi_inlrs = 0;
+        n_cheirality = 0;
         return Pose();
     }
 }
@@ -471,7 +653,7 @@ void plotMatches(Frame &prev_frame, Frame &curr_frame, FeatureMatches &matches)
 }
 
 
-void filterMatches(FeatureMatches &matches, const cv::Mat &inlrs_mask, int n_epi_inlrs)
+void FeatureTracker::filterMatches(FeatureMatches &matches, const cv::Mat &inlrs_mask, int n_epi_inlrs) const
 {
     if (n_epi_inlrs==0)
     {
@@ -519,22 +701,28 @@ FeatureMatches findSIFTMatches(Frame &prev_frame, Frame &curr_frame)
         //if( matches[i].distance <= std::max(3*min_dist, 100.0) )
         if( matches[i].distance <= std::max(3*min_dist, 80.0) )
         {
-            good_matches.push_back( matches[i] );
+            good_matches.push_back(matches[i]);
         }
     }
     return good_matches;
 }
 
 
-int FeatureTracker::refinePose(Frame &f1, Frame &f2, Pose &pose, cv::Mat &E, FeatureMatches &matches) const
+int FeatureTracker::refinePose(Frame &f1, Frame &f2, Pose &pose, cv::Mat &E_best, FeatureMatches &matches) const
 {
-    const int max_iters = 100;
+    if (matches.size()<5)
+    {
+        return (int)matches.size();
+    }
+    
+    const int max_iters = 5;
     const Camera &cam = Camera::instance();
     const cv::Mat K = cv::Mat(cam.cameraParameters().intrinsic());
     const cv::Mat K_inv = K.inv();
     const cv::Mat K_inv_t = K_inv.t();
     
     int best_inlrs = (int)matches.size();
+    cv::Mat E = E_best;
     
     std::vector< std::pair<int,int> > matched_pairs;
     cv::Mat inlrs_mask;
@@ -543,20 +731,24 @@ int FeatureTracker::refinePose(Frame &f1, Frame &f2, Pose &pose, cv::Mat &E, Fea
     int iters = 1;
     do
     {
-        cv::Mat F = K_inv_t*E*K_inv;
+        cv::Mat F = K_inv_t*E_best*K_inv;
         matched_pairs.clear();
-        findORBMatches(f1, f2, F, matched_pairs);
+        if (findORBMatches(f1, f2, F, matched_pairs) <5)
+        {
+            break;
+        }
         
         curr_matches.clear();
         for (auto &match_pair: matched_pairs)
             curr_matches.push_back( cv::DMatch(match_pair.first, match_pair.second, 0) );
         
         inlrs_mask = cv::Mat();
-        Pose curr_pose = findRelativePose(f1, f2, curr_matches, inlrs, inlrs_mask, E, 1.5);
+        Pose curr_pose = findRelativePose(f1, f2, curr_matches, inlrs, inlrs_mask, E);
         
         if (inlrs > best_inlrs )
         {
             best_inlrs = inlrs;
+            E_best = E;
             matches = std::move(curr_matches);
             pose = std::move(curr_pose);
             filterMatches(matches, inlrs_mask, inlrs); //move out of the while
@@ -575,9 +767,10 @@ int FeatureTracker::refinePose(Frame &f1, Frame &f2, Pose &pose, cv::Mat &E, Fea
 
 
 bool FeatureTracker::findPose(View &v1, View &v2, View &pivot,
-                              std::vector<int> pivot2v2, Pose &pose,
-                              cv::Mat &E, FeatureMatches &matches)
+                              const std::vector<int> pivot2v2, Pose &pose,
+                              cv::Mat &E_out, FeatureMatches &matches)
 {
+    matches.clear();
     if (!v1.isConnectedTo(pivot))
     {
         return false;
@@ -598,19 +791,20 @@ bool FeatureTracker::findPose(View &v1, View &v2, View &pivot,
         }
     }
     matches = std::move(tmp_matches);
-//
-//    if (matches.size()<10)
-//    {
-//        break;
-//    }
-    
-    cv::Mat inlrs_mask;
-    int n_epi_inlrs;
-    pose = findRelativePose(v1.frame(), v2.frame(), matches, n_epi_inlrs, inlrs_mask, E, 2);
-    
-    filterMatches(matches, inlrs_mask, n_epi_inlrs);
-    
-    return true;
+
+    if (matches.size()>5)
+    {
+        cv::Mat inlrs_mask;
+        int n_epi_inlrs;
+        pose = findRelativePose(v1.frame(), v2.frame(), matches, n_epi_inlrs, inlrs_mask, E_out);
+        
+        filterMatches(matches, inlrs_mask, n_epi_inlrs);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 
@@ -618,60 +812,226 @@ Pose FeatureTracker::findInitialPose(View &v1, View &v2,
                                      cv::Mat &E, FeatureMatches &matches, int min_matches)
 {
     Pose pose;
-    //int rad = 170;
-    int rad = 160;
+    
+    //int rad = 85;
     
     int n_epi_inlrs = 0;
     std::vector<int> curr2prev_map; //-1 if could not find any match or untracked
-    int out_iter = 0;
+    int iters = 0;
     
     auto &f1 = v1.frame();
     auto &f2 = v2.frame();
+    // obtain patch size based on the point distance!
     
+    double rad = 2.0*m_local_rad;
     do
     {
         int n_curr2prev_matches = 0;
         
-        int inner_iter= 0;
-        do
+        curr2prev_map.clear();
+        n_curr2prev_matches = findCurr2PrevLocalMatches(f2, f1,
+                                                        curr2prev_map, rad);
+        // find and update mean rad
+        std::vector<double> dists;
+        dists.reserve(f2.undistortedKeypoints().size());
+        for (int k=0;k<f2.undistortedKeypoints().size(); k++)
         {
-            curr2prev_map.clear();
-            n_curr2prev_matches = findCurr2PrevLocalMatches(f2, f1, curr2prev_map, rad);
-            
-            if (n_curr2prev_matches > 1.5*min_matches)
-                break;
-            else
-                rad *= 1.25;
+            const auto &idx = curr2prev_map[k];
+            if (idx>=0)
+            {
+                const auto &p2 = f2.undistortedKeypoints()[k];
+                const auto &p1 = f1.undistortedKeypoints()[idx];
+                double d = cv::norm(p1.pt-p2.pt);
+                dists.push_back(d);
+            }
         }
-        while (inner_iter++<10);
+        
+        double mean_dist = std::accumulate( dists.begin(), dists.end(), 0.0)/dists.size();
+        m_local_rad = mean_dist; //.5*(m_local_rad + mean_dist);
         
         matches.clear();
         for (int curr_idx=0; curr_idx<curr2prev_map.size(); curr_idx++)
         {
             const int &prev_idx = curr2prev_map[curr_idx]; // in prev
-            if (prev_idx!=-1)
+            if (prev_idx != -1)
+            {
                 matches.push_back(cv::DMatch(prev_idx,curr_idx,0));
+            }
         }
         
         cv::Mat inlrs_mask;
-        pose = findRelativePose(f1, f2, matches, n_epi_inlrs, inlrs_mask, E, 2);
+        pose = findRelativePose(f1, f2, matches, n_epi_inlrs, inlrs_mask, E);
         
-        if (n_epi_inlrs > min_matches)
+        if (n_epi_inlrs > 2*min_matches)
+        {
             filterMatches(matches, inlrs_mask, n_epi_inlrs);
+            break;
+        }
         else
+        {
             rad *= 1.25;
+        }
     }
-    while(out_iter++<5);
+    while(iters++<5);
+    
+    std::cout<<"------------------------------" << std::endl;
+    std::cout<<"   local search iters  =  " << iters<<std::endl;
+    std::cout<<"   local search rad    =  " << m_local_rad<<std::endl;
+    std::cout<<"------------------------------" << std::endl;
     
     return pose;
 }
 
 
-void FeatureTracker::processFrame(Frame &frame)
+//TODO: return the candidate view
+bool FeatureTracker::detectLoopCandidates(View &view, std::vector<View*> &candidates)
+{
+    ORBVocabulary &orb_vocab = ORBVocabulary::instance();
+    auto &vocab = orb_vocab.vocabulary();
+    
+    //if (view.frame().id())
+    
+    // Compute reference BoW similarity score
+    // This is the lowest score to a connected keyframe in the covisibility graph
+    // We will impose loop candidates to have a higher similarity than this
+//    const vector<KeyFrame*> vpConnectedKeyFrames = mpCurrentKF->GetVectorCovisibleKeyFrames();
+    const auto &bow1 = view.frame().bow();
+    const View::Connections &connections = view.connections();
+    
+    float min_score = 1;
+    float score;
+    for (const auto &c: connections)
+    {
+        View *v2 = c.first;
+
+        // KeyFrame* pKF = vpConnectedKeyFrames[i];
+        // if(pKF->isBad())
+        //      continue;
+        
+        const auto &bow2 = v2->frame().bow();
+
+        score = vocab.score(bow1, bow2);
+        if(score < min_score)
+            min_score = score;
+    }
+
+    // Query the database imposing the minimum score
+//    vector<KeyFrame*> vpCandidateKFs = mpKeyFrameDB->DetectLoopCandidates(mpCurrentKF, minScore);
+    auto &db = ViewDatabase::instance();
+    candidates = db.detectLoopCandidates(view, min_score);
+
+    // If there are no loop candidates, just add new keyframe and return false
+    if(candidates.empty())
+    {
+//        mpKeyFrameDB->add(mpCurrentKF);
+//        db.add(&view);
+//        mvConsistentGroups.clear();
+//        mpCurrentKF->SetErase();
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+
+
+bool FeatureTracker::checkLoopConsistency(const std::vector<View*> &loop_candidates,
+                          std::vector<View*> &consistent_candidates,
+                          std::vector<ConsistentGroup> &consistent_groups,
+                          std::vector<ConsistentGroup> &prev_consistent_groups,
+                          const int covisibility_consistency_th )
+{
+    // For each loop candidate check consistency with previous loop candidates
+    // Each candidate expands a covisibility group (keyframes connected to the loop candidate in the covisibility graph)
+    // A group is consistent with a previous group if they share at least a keyframe
+    // We must detect a consistent loop in several consecutive keyframes to accept it
+    
+    consistent_candidates.clear(); //  mvpEnoughConsistentCandidates.clear();
+    //std::vector<ConsistentGroup> consistent_groups;   // vCurrentConsistentGroups
+    consistent_groups.clear();
+    
+    std::vector<bool> prev_consistent_group_flag(prev_consistent_groups.size(),false);  //vector<bool> vbConsistentGroup(mvConsistentGroups.size(),false);
+    
+    
+    for (View *candidate : loop_candidates) //for(size_t i=0, iend=vpCandidateKFs.size(); i<iend; i++)
+    {
+        //KeyFrame* pCandidateKF = vpCandidateKFs[i];
+        
+        // --- Create candidate group -----------
+        std::set<View*> candidate_group;
+        const auto &connections = candidate->connections();
+        for(auto pair: connections)
+        {
+            View *connected_view = pair.first;
+            candidate_group.insert(connected_view);
+        }
+        candidate_group.insert(candidate);
+        
+        
+        // --- compare candidate grou against prevoius consistent groups -----------
+        
+        bool enough_consistent = false;
+        bool consistent_for_some_group = false;
+        
+        
+        for(size_t g=0, iendG=prev_consistent_groups.size(); g<iendG; g++) //for(size_t iG=0, iendG=mvConsistentGroups.size(); iG<iendG; iG++)
+        {
+            // find if candidate_group is consistent with any previous consistent group
+            std::set<View*> prev_group = prev_consistent_groups[g].first;
+            bool consistent = false;
+            for (View *candidate: candidate_group)
+            {
+                if( prev_group.count(candidate) )
+                {
+                    consistent = true;
+                    consistent_for_some_group = true;
+                    break;
+                }
+            }
+            
+            if(consistent)
+            {
+                int previous_consistency = prev_consistent_groups[g].second;
+                int current_consistency = previous_consistency + 1;
+                
+                if( !prev_consistent_group_flag[g] )
+                {
+                    consistent_groups.push_back(std::make_pair(candidate_group,
+                                                               current_consistency));
+                    prev_consistent_group_flag[g] = true; //this avoid to include the same group more than once
+                }
+                
+                if(current_consistency >= covisibility_consistency_th && !enough_consistent)
+                {
+                    consistent_candidates.push_back(candidate);
+                    enough_consistent = true; //this avoid to insert the same candidate more than once
+                }
+            }
+        }
+        
+        // If the group is not consistent with any previous group insert with consistency counter set to zero
+        if(!consistent_for_some_group)
+        {
+            consistent_groups.push_back(std::make_pair(candidate_group,0));
+        }
+    }
+    
+    //        // Update Covisibility Consistent Groups
+    //        mvConsistentGroups = vCurrentConsistentGroups;
+    //        // Add Current Keyframe to database
+    //        mpKeyFrameDB->add(mpCurrentKF);
+    
+    return !consistent_candidates.empty();    
+}
+
+
+View &FeatureTracker::processFrame(Frame &frame)
 {
     const int graph_degree = 3;
     const int skip = 0;
-    const int min_matches = 35;
+    const int min_matches = 30;
     
     // Create View
     // encapsulate into a makeView function
@@ -684,7 +1044,7 @@ void FeatureTracker::processFrame(Frame &frame)
     const int m = (int)m_views.size();
     
     if (m <= skip+1) // we are done for the first frames
-        return;
+        return *curr_view;
     
     const int curr_view_idx = m-1;
     int prev_view_idx = curr_view_idx-skip-1;
@@ -702,15 +1062,17 @@ void FeatureTracker::processFrame(Frame &frame)
     FeatureMatches matches;
     Pose relPose = findInitialPose(*prev_view, *curr_view, E, matches, min_matches);
     
-    //refinePose(prev_frame, curr_frame, relPose, E, matches);
+    refinePose(prev_frame, curr_frame, relPose, E, matches);
     
     if (matches.size()<min_matches)
     {
-        std::cerr << "failed to connect current frame: Insuficient matches " << matches.size() <<std::endl;
+        std::cerr << "failed to connect current frame: Insuficient matches " << matches.size() << std::endl;
         std::exit(-1);
     }
     
     View::connect(*prev_view, *curr_view, matches, relPose);
+    std::cout << "# matches for (" << prev_view_idx << ", " << curr_view_idx << ")  =  " << matches.size() << std::endl;
+    
     count_connections++;
     prev_view_idx--;
     
@@ -729,28 +1091,29 @@ void FeatureTracker::processFrame(Frame &frame)
     }
     
     
-    while ( prev_view_idx>= 0 && (curr_view_idx-prev_view_idx) <= graph_degree )
+    while (prev_view_idx>= 0 && (curr_view_idx-prev_view_idx) <= graph_degree)
     {
         prev_view = m_views[prev_view_idx];
         Frame &prev_frame = prev_view->frame();
         
         if (!findPose(*prev_view, *curr_view, pivot, pivot2current_map, relPose, E, matches))
         {
+            std::cout << "cannot connect (" << prev_view_idx << ", " << curr_view_idx << ")  -- failed to find pose" << std::endl;
+            
             break;
         }
         
-         std::cout << "number of matches for view pair (" << prev_view_idx << ", " << curr_view_idx << ")  =  " << matches.size() << std::endl;
-
         if (matches.size()>10)
             refinePose(prev_frame, curr_frame, relPose, E, matches);
         
         if (matches.size() < min_matches)
         {
-            std::cerr << "abort connectiong -- insufficient matches : "<< matches.size() <<std::endl;
+            std::cout << "cannot connect (" << prev_view_idx << ", " << curr_view_idx << ")  -- insufficient matches: " << matches.size() << std::endl;
+            
             break;
         }
         
-        std::cout << "number of matches (curr-->prev) for view pair (" << prev_view_idx << ", " << curr_view_idx << ")  =  " << matches.size() << std::endl;
+        std::cout << "# matches for (" << prev_view_idx << ", " << curr_view_idx << ")  =  " << matches.size() << std::endl;
         
         View::connect(*prev_view, *curr_view, matches, relPose);
         count_connections++;
@@ -764,6 +1127,9 @@ void FeatureTracker::processFrame(Frame &frame)
         std::cerr << "could not connect frame!" << std::endl;
         std::exit(-1);
     }
+    
+    return *curr_view;
+    
 }
 
 
@@ -798,7 +1164,7 @@ void FeatureTracker::processFrameSift(Frame &frame)
     //prev_visited< graph_degree
     while ( prev_view_idx>= 0 && (count_connections < graph_degree) )
     {
-        assert(prev_view_idx<curr_view_idx);
+        assert(prev_view_idx < curr_view_idx);
         
         // find initial matches for (prev, current)
         View *prev_view = m_views[prev_view_idx];
@@ -1116,7 +1482,6 @@ void FeatureTracker::rotAvg(int winSize)
     if (f == 0)
     {
         Q.row(0) << 0, 0, 0, 1;
-        std::cout << "set first abs rot = I" << std::endl;
         f = 1;
     }
     
@@ -1167,13 +1532,13 @@ void FeatureTracker::rotAvg(int winSize)
         
         pose.setR(R_cv);
     }
-    
 }
 
 
 
 bool View::connect(View &v1, View &v2, FeatureMatches matches, Pose rel_pose)
 {
+    assert(matches.size()>4); //
     if (v1.m_connections.count(&v2)>0)
     {
         assert(v2.m_connections.count(&v1)>0); // we must have an undirected graph

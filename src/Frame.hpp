@@ -66,6 +66,8 @@ public:
     
     const DBoW2::FeatureVector &bow_features() const { return m_bow_features; }
     
+    const DBoW2::BowVector &bow() const { return m_bow; }
+    
     
 private:
     void findFeatures();

@@ -19,6 +19,8 @@
 #include "ORBExtractor.hpp"
 #include "FeatureTracker.hpp"
 #include "SequenceLoader.hpp"
+#include "ViewDatabase.hpp"
+
 
 using namespace linf;
 
@@ -58,26 +60,6 @@ void config(const std::string &filename)
     dist_coef(2) = settings["Camera.p1"];
     dist_coef(3) = settings["Camera.p2"];
     
-    //    const float k3 = settings["Camera.k3"];
-    //    if(k3!=0)
-    //    {
-    //        DistCoef.resize(5);
-    //        DistCoef.at<float>(4) = k3;
-    //    }
-    //    DistCoef.copyTo(mDistCoef);
-    //
-    //    mbf = fSettings["Camera.bf"];
-    //
-    //    float fps = settings["Camera.fps"];
-    //    if(fps==0)
-    //    {
-    //        fps=30;
-    //    }
-    //
-    //    // Max/Min Frames to insert keyframes and to check relocalisation
-    //    mMinFrames = 0;
-    //    mMaxFrames = fps;
-    //
     
     cam_pars = CameraParameters(K,dist_coef);
     
@@ -101,8 +83,26 @@ void config(const std::string &filename)
     orb_vocab.load(vocab_filename);
 }
 
+// move to some util class...
+void myPlotMatches(Frame &prev_frame, Frame &curr_frame, FeatureMatches &matches)
+{
+    auto im1 = prev_frame.getImage();
+    auto im2 = curr_frame.getImage();
+    auto kps1 = prev_frame.keypoints();
+    auto kps2 = curr_frame.keypoints();
+    
+    cv::Mat im_matches;
+    cv::drawMatches(im1, kps1, im2, kps2, matches, im_matches);
+    double s=.4;
+    cv::Size size(s*im_matches.cols,s*im_matches.rows);
+    resize(im_matches,im_matches,size);
+    cv::imshow("matches after ransac", im_matches);
+    cv::waitKey(1);
+}
 
-int main(int argc, const char * argv[])
+
+
+int main(int argc, const char *argv[])
 {
     const cv::String keys =
     "{help h usage ?   |      | print this message     }"
@@ -113,9 +113,12 @@ int main(int argc, const char * argv[])
     "{gt               |      | ground truth           }"
     ;
     
+    //TODO: move this flag to the arguments
+    const bool detect_loop_closure = true;
+    
     cv::CommandLineParser parser(argc, argv, keys);
     
-    parser.about("linfslam v0.0.1");
+    parser.about("linfslam v0.0.2");
     parser.printMessage();
     if (parser.has("help"))
     {
@@ -147,7 +150,6 @@ int main(int argc, const char * argv[])
     std::vector<Pose::Mat3> gt_rots;
     if (gt_provided)
     {
-        //string gt_file = "maptek_gt.txt";
         std::ifstream myfile (gt_file);
         if (!myfile.is_open())
         {
@@ -169,7 +171,6 @@ int main(int argc, const char * argv[])
     
     
     
-    
     config(config_filename);
     
     std::cout<< "K:\n";
@@ -182,14 +183,19 @@ int main(int argc, const char * argv[])
     
     FeatureTracker tracker(orb_extractor->GetScaleSigmaSquares());
     
-   
+    // to check consistency for loop clodure
+    std::vector<FeatureTracker::ConsistentGroup> prev_consistent_groups;
+    auto &db = ViewDatabase::instance();
+    
+    std::cout<< "initialising database..."<<std::endl;
+    db.init();
     
     
     bool is_camera_init = false; //flag for camera initialization
     
     int id = 0;
     int count = 0;
-    const int sampling_step = 5;
+    const int sampling_step = 5; //5
     for (auto frame : loader)
     {
         if (count++%sampling_step != 0) // sampling
@@ -216,20 +222,96 @@ int main(int argc, const char * argv[])
         double frame_creation_time = (double)(toc-tic)/CLOCKS_PER_SEC;
         
         tic = clock();
-        tracker.processFrame(f);
+        View &view = tracker.processFrame(f);
+        
+        // -------- loop closure
+        
+        //if (id%5==0)//(id%5==0)
+        bool loop_new_connections = false;
+        
+        if (detect_loop_closure)
+        {
+            
+        std::vector<View*> loop_candidates;
+        if (tracker.detectLoopCandidates(view, loop_candidates) )
+        {
+            std::vector<View*> consistent_candidates;
+            std::vector<FeatureTracker::ConsistentGroup> consistent_groups;
+            
+            if (tracker.checkLoopConsistency(loop_candidates, consistent_candidates,
+                                             consistent_groups, prev_consistent_groups) )
+            {
+                // add extra connections and run system wise rotation averaging!!!
+                std::cout << " * * * loop closure detected! * * *\n" << std::endl;
+                
+                for (View *prev_view : consistent_candidates)
+                {
+                    //const int min_matches = 50;
+                    const int min_matches = 40;
+                    
+                    //find matches
+                    double nnratio = .8;
+                    std::vector<std::pair<int,int> > matched_pairs;
+                    int n_global_matches = tracker.findORBMatchesByBoW(prev_view->frame(), f,
+                                                matched_pairs, nnratio);
+                    std::cout<< "we have found "<< n_global_matches << " global matches using BOW"<<std::endl;
+                    
+                    
+                    FeatureMatches matches;
+                    for (auto &match_pair: matched_pairs)
+                        matches.push_back( cv::DMatch(match_pair.first, match_pair.second, 0) );
+                    
+                    //find pose
+                    int inlrs;
+                    cv::Mat inlrs_mask;
+                    inlrs_mask = cv::Mat();
+                    cv::Mat E;
+                    Pose relPose = tracker.findRelativePose(prev_view->frame(), f,
+                                                    matches, inlrs, inlrs_mask, E);
+                    
+                    tracker.filterMatches(matches, inlrs_mask, inlrs);
+                    
+                    tracker.refinePose(prev_view->frame(), f, relPose, E, matches);
+                    
+                    std::cout<<"  #matches after refining " << matches.size() << std::endl;
+                    
+                    if (matches.size() >= min_matches)
+                    {
+                        View::connect(*prev_view, view, matches, relPose);
+                        std::cout << "   new connection: ( "<< prev_view->frame().id() <<", "<< view.frame().id() <<" )" << std::endl;
+                        //tracker.plotMatches(prev_frame, curr_frame, matches) ;
+                        loop_new_connections = true;
+                        
+                        myPlotMatches(prev_view->frame(), view.frame(), matches);
+                    }
+                }
+            }
+            prev_consistent_groups = std::move(consistent_groups);
+            
+        }
+        db.add(&view);
+        
+        }
+        // -------- end loop closure
+        
         toc = clock();
         double frame_processing_time = (double)(toc-tic)/CLOCKS_PER_SEC;
         
         
         tic = clock();
-        if (0 && id%200==0)
+        bool add_correction = gt_provided && id%50==0;
+        if (add_correction)
         {
             Pose pose_gt;
             pose_gt.setR( gt_rots[id*sampling_step] );
             
             tracker.fixPose(id, pose_gt);
             std::cout<<"Fixing pose for view id " << id << std::endl;
-            
+        }
+        
+        
+        if (loop_new_connections || add_correction)
+        {
             tracker.rotAvg(5000000); //global
         }
         else
@@ -241,6 +323,7 @@ int main(int argc, const char * argv[])
         
         printf("frame %d  -- runtimes: frame creation %.3fl; frame processing %.3f, rotavg %.3f\n",
                 id, frame_creation_time, frame_processing_time, rotavg_time);
+        std::cout<<"=========================================="<<std::endl;
         // fix camera with GT
         // keep fixed cameras
         // tracker.loopClosure();
