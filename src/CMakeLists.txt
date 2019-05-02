@@ -54,6 +54,7 @@ add_executable( linfslam main
     SIFTExtractor
     Pose
     Converter
+    ViewDatabase
 )
 
 target_include_directories( linfslam PUBLIC
