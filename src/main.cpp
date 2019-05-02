@@ -247,14 +247,14 @@ int main(int argc, const char *argv[])
                 for (View *prev_view : consistent_candidates)
                 {
                     //const int min_matches = 50;
-                    const int min_matches = 40;
+                    const int min_matches = 80;
                     
                     //find matches
                     double nnratio = .8;
                     std::vector<std::pair<int,int> > matched_pairs;
                     int n_global_matches = tracker.findORBMatchesByBoW(prev_view->frame(), f,
                                                 matched_pairs, nnratio);
-                    std::cout<< "we have found "<< n_global_matches << " global matches using BOW"<<std::endl;
+                    //std::cout<< "we have found "<< n_global_matches << " global matches using BOW"<<std::endl;
                     
                     
                     FeatureMatches matches;
@@ -268,26 +268,27 @@ int main(int argc, const char *argv[])
                     cv::Mat E;
                     Pose relPose = tracker.findRelativePose(prev_view->frame(), f,
                                                     matches, inlrs, inlrs_mask, E);
+                    if (inlrs < min_matches)
+                        continue;
                     
                     tracker.filterMatches(matches, inlrs_mask, inlrs);
-                    
                     tracker.refinePose(prev_view->frame(), f, relPose, E, matches);
                     
-                    std::cout<<"  #matches after refining " << matches.size() << std::endl;
+                    //std::cout<<"  #matches after refining " << matches.size() << std::endl;
                     
-                    if (matches.size() >= min_matches)
-                    {
-                        View::connect(*prev_view, view, matches, relPose);
-                        std::cout << "   new connection: ( "<< prev_view->frame().id() <<", "<< view.frame().id() <<" )" << std::endl;
-                        //tracker.plotMatches(prev_frame, curr_frame, matches) ;
-                        loop_new_connections = true;
-                        
-                        myPlotMatches(prev_view->frame(), view.frame(), matches);
-                    }
+                    if (matches.size() < min_matches)
+                        continue;
+                    
+                    View::connect(*prev_view, view, matches, relPose);
+                    std::cout << "   new connection: ( "<< prev_view->frame().id() <<", "<< view.frame().id() <<" ) " ;
+                    std::cout << " # matches: "<<matches.size()<<std::endl;
+                    //tracker.plotMatches(prev_frame, curr_frame, matches) ;
+                    loop_new_connections = true;
+                    
+                    myPlotMatches(prev_view->frame(), view.frame(), matches);
                 }
             }
-            prev_consistent_groups = std::move(consistent_groups);
-            
+            prev_consistent_groups = std::move(consistent_groups);            
         }
         db.add(&view);
         
@@ -299,7 +300,7 @@ int main(int argc, const char *argv[])
         
         
         tic = clock();
-        bool add_correction = gt_provided && id%50==0;
+        bool add_correction = gt_provided && id%40==0;
         if (add_correction)
         {
             Pose pose_gt;

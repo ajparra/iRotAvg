@@ -12,8 +12,7 @@
 #include <ctime> // time_t
 
 #define HISTO_LENGTH 30
-#define TH_LOW 80
-//#define TH_LOW 80
+#define TH_LOW 50
 
 #define PLOT true
 
@@ -302,7 +301,6 @@ int FeatureTracker::findORBMatches(Frame &f1, Frame &f2,
     // Compare only ORB that share the same node
     
     int n_matches = 0;
-    //std::vector<bool> matched2(n2,false);
     std::vector<int> matches12(n1,-1);
     
     std::vector<int> rotHist[HISTO_LENGTH];
@@ -350,7 +348,8 @@ int FeatureTracker::findORBMatches(Frame &f1, Frame &f2,
                     
                     const cv::KeyPoint &kp2 = keypoints2[idx2];
                     
-                    if(checkDistEpipolarLine(kp1,kp2,F12))
+                    //if(checkDistEpipolarLine(kp1,kp2,F12))
+                    if(checkDistEpipolarLine(kp2,kp1,F12))
                     {
                         bestIdx2 = idx2;
                         bestDist = dist;
@@ -715,7 +714,7 @@ int FeatureTracker::refinePose(Frame &f1, Frame &f2, Pose &pose, cv::Mat &E_best
         return (int)matches.size();
     }
     
-    const int max_iters = 5;
+    const int max_iters = 10;
     const Camera &cam = Camera::instance();
     const cv::Mat K = cv::Mat(cam.cameraParameters().intrinsic());
     const cv::Mat K_inv = K.inv();
@@ -726,19 +725,21 @@ int FeatureTracker::refinePose(Frame &f1, Frame &f2, Pose &pose, cv::Mat &E_best
     
     std::vector< std::pair<int,int> > matched_pairs;
     cv::Mat inlrs_mask;
-    FeatureMatches curr_matches;
+    
     int inlrs;
     int iters = 1;
     do
     {
         cv::Mat F = K_inv_t*E_best*K_inv;
+        
         matched_pairs.clear();
         if (findORBMatches(f1, f2, F, matched_pairs) <5)
         {
             break;
         }
-        
-        curr_matches.clear();
+    
+        FeatureMatches curr_matches;
+        //curr_matches.clear();
         for (auto &match_pair: matched_pairs)
             curr_matches.push_back( cv::DMatch(match_pair.first, match_pair.second, 0) );
         
@@ -1031,7 +1032,7 @@ View &FeatureTracker::processFrame(Frame &frame)
 {
     const int graph_degree = 3;
     const int skip = 0;
-    const int min_matches = 30;
+    const int min_matches = 100;
     
     // Create View
     // encapsulate into a makeView function

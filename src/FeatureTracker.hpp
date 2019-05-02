@@ -79,7 +79,7 @@ public:
     Pose findRelativePose(Frame &f1, Frame &f2,
                           FeatureMatches &matches,
                           int &n_epi_inlrs, cv::Mat &mask,
-                          cv::Mat &E, double th=.5) const;
+                          cv::Mat &E, double th=1) const;
     
 
     void filterMatches(FeatureMatches &matches, const cv::Mat &inlrs_mask, int n_epi_inlrs) const;
