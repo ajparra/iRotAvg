@@ -23,8 +23,8 @@
  * along with IRA. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef FeatureTracker_hpp
-#define FeatureTracker_hpp
+#ifndef ViewGraph_hpp
+#define ViewGraph_hpp
 
 #include <stdio.h>
 #include <vector>
@@ -36,14 +36,14 @@
 #include "l1_irls.hpp"
 //----------------------------------------------
 
-namespace linf
+namespace ira
 {
-class FeatureTracker
+class ViewGraph
 {
     
 public:
     
-    FeatureTracker(std::vector<float> scale_sigma_squares):
+    ViewGraph(std::vector<float> scale_sigma_squares):
     m_scale_sigma_squares(scale_sigma_squares)
     {}
     
@@ -128,4 +128,4 @@ private:
 };
 
 }
-#endif /* FeatureTracker_hpp */
+#endif /* ViewGraph_hpp */

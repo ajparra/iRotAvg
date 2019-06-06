@@ -1,3 +1,28 @@
+#
+# This file is part of IRA.
+#
+# Created by Alvaro Parra on 19/3/19.
+# Copyright © 2019 Alvaro Parra <alvaro dot parrabustos at adelaide
+# dot edu dot au> (The University of Adelaide)
+# For more information see <https://github.com/ajparra/IRA>
+#
+# This work was supported by Maptek (http://maptek.com) and the
+# ARC Grant DP160103490.
+#
+# IRA is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# IRA is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with IRA. If not, see <http://www.gnu.org/licenses/>.
+#
+
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/l1_irls/cmake")
 include(UpdateCacheVariable)
 
@@ -5,7 +30,7 @@ include(UpdateCacheVariable)
 find_package(Boost COMPONENTS filesystem REQUIRED)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
-find_package(OpenCV 3.4 REQUIRED)
+find_package(OpenCV 4 REQUIRED)
 find_package(SuiteSparse)
 
 if (SUITESPARSE_FOUND)
@@ -54,6 +79,7 @@ add_executable( linfslam main
     SIFTExtractor
     Pose
     Converter
+    ViewDatabase
 )
 
 target_include_directories( linfslam PUBLIC

@@ -1,19 +1,37 @@
-//
-//  Frame.cpp
-//  linfslam
-//
-//  Created by Alvaro Parra on 26/11/18.
-//  Copyright © 2018 Alvaro Parra. All rights reserved.
-//
+/**
+ * This file is part of IRA.
+ *
+ * Created by Alvaro Parra on 19/3/19.
+ * Copyright © 2019 Alvaro Parra <alvaro dot parrabustos at adelaide
+ * dot edu dot au> (The University of Adelaide)
+ * For more information see <https://github.com/ajparra/IRA>
+ *
+ * This work was supported by Maptek (http://maptek.com) and the
+ * ARC Grant DP160103490.
+ *
+ * IRA is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * IRA is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with IRA. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include "Frame.hpp"
 #include "Camera.hpp"
 #include "Converter.hpp"
 #include <ctime>
 #include <opencv2/xfeatures2d.hpp>
+#include <opencv2/opencv.hpp>
 
 
-using namespace linf;
+using namespace ira;
 
 std::string type2str(int type) {
     std::string r;
@@ -47,13 +65,37 @@ void Frame::findFeatures()
     {
         // use ORBextractor from ORBSLAM2
         (m_orb_extractor)(image,cv::Mat(),m_keypoints,m_descriptors);
+
+//        // ignore keypoints on the top of the image
+//        std::vector<cv::KeyPoint> keypoints;
+//        keypoints.reserve(m_keypoints.size());
+//        std::vector<bool> map(m_keypoints.size());
+//        int i = 0;
+//        for (auto &kp: m_keypoints)
+//        {
+//            if (kp.pt.y>300) // && kp.pt.y<900)
+//            {
+//                map[i]=true;
+//                keypoints.push_back(kp);
+//            }
+//            i++;
+//        }
+//        cv::Mat descriptors = cv::Mat::zeros(0, 32, CV_8UC1);
+//        for(i=0; i<m_descriptors.rows; i++)
+//        {
+//            if (map[i])
+//            {
+//                descriptors.push_back(m_descriptors.row(i));
+//            }
+//        }
+//        m_keypoints = std::move(keypoints);
+//        m_descriptors = descriptors.clone();
     }
     else
     {
         cv::Ptr<cv::xfeatures2d::SIFT> sift = cv::xfeatures2d::SIFT::create();  // have to use Ptr and create()
         sift->detectAndCompute(image, cv::Mat(), m_keypoints, m_descriptors);
     }
-    
 }
 
 
@@ -84,16 +126,17 @@ void Frame::undistortKeypoints()
     mat = mat.reshape(1);
     
     // Fill undistorted keypoint vector
-    m_undistorted_keypoints.resize(n); //why? reserve instead?
+    //m_undistorted_keypoints.resize(n);
+    m_undistorted_keypoints.reserve(n);
     for(int i=0; i<n; i++)
     {
         cv::KeyPoint kp = m_keypoints[i];
         kp.pt.x = mat.at<double>(i,0);
         kp.pt.y = mat.at<double>(i,1);
-        m_undistorted_keypoints[i] = kp;
+        //m_undistorted_keypoints[i] = kp;
+        m_undistorted_keypoints.push_back(kp);
     }
 }
-
 
 
 cv::Mat Frame::getImage()
@@ -102,7 +145,7 @@ cv::Mat Frame::getImage()
     
     image = cv::imread(this->m_path, cv::IMREAD_GRAYSCALE);   // Read the file
     
-    if(! image.data )                              // Check for invalid input
+    if( !image.data )                              // Check for invalid input
     {
         class FrameException: public std::exception
         {

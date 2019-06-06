@@ -1,5 +1,29 @@
+/**
+ * This file is part of IRA.
+ *
+ * Created by Alvaro Parra on 19/3/19.
+ * Copyright © 2019 Alvaro Parra <alvaro dot parrabustos at adelaide
+ * dot edu dot au> (The University of Adelaide)
+ * For more information see <https://github.com/ajparra/IRA>
+ *
+ * This work was supported by Maptek (http://maptek.com) and the
+ * ARC Grant DP160103490.
+ *
+ * IRA is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * IRA is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with IRA. If not, see <http://www.gnu.org/licenses/>.
+ */
 
-#include "FeatureTracker.hpp"
+#include "ViewGraph.hpp"
 #include "ViewDatabase.hpp"
 
 #include <ctime>
@@ -9,10 +33,10 @@
 
 #define PLOT true
 
-using namespace linf;
+using namespace ira;
 
 
-bool FeatureTracker::checkDistEpipolarLine(const cv::KeyPoint &kp1,
+bool ViewGraph::checkDistEpipolarLine(const cv::KeyPoint &kp1,
                                            const cv::KeyPoint &kp2,
                                            const cv::Mat &F12) const
 {
@@ -97,7 +121,7 @@ int descriptorDistance(const cv::Mat &a, const cv::Mat &b)
 }
 
 
-int FeatureTracker::findORBMatchesByBoW(Frame &f1, Frame &f2,
+int ViewGraph::findORBMatchesByBoW(Frame &f1, Frame &f2,
                                         std::vector<std::pair<int,int> > &matched_pairs,
                                         const double nnratio) const
 {
@@ -267,7 +291,7 @@ int FeatureTracker::findORBMatchesByBoW(Frame &f1, Frame &f2,
 }
 
 
-int FeatureTracker::findORBMatches(Frame &f1, Frame &f2,
+int ViewGraph::findORBMatches(Frame &f1, Frame &f2,
                                    cv::Mat F12,
                                    std::vector<std::pair<int,int> > &matched_pairs) const
 {
@@ -569,7 +593,7 @@ int findCurr2PrevLocalMatches(Frame &curr, Frame &prev,
 
 
 
-Pose FeatureTracker::findRelativePose(Frame &f1, Frame &f2,
+Pose ViewGraph::findRelativePose(Frame &f1, Frame &f2,
                                       FeatureMatches &matches,
                                       int &n_cheirality, cv::Mat &mask, cv::Mat &E,
                                       double th) const
@@ -639,7 +663,7 @@ void plotMatches(Frame &prev_frame, Frame &curr_frame, FeatureMatches &matches)
 }
 
 
-void FeatureTracker::filterMatches(FeatureMatches &matches, const cv::Mat &inlrs_mask, int n_epi_inlrs) const
+void ViewGraph::filterMatches(FeatureMatches &matches, const cv::Mat &inlrs_mask, int n_epi_inlrs) const
 {
     if (n_epi_inlrs==0)
     {
@@ -694,7 +718,7 @@ FeatureMatches findSIFTMatches(Frame &prev_frame, Frame &curr_frame)
 }
 
 
-int FeatureTracker::refinePose(Frame &f1, Frame &f2, Pose &pose, cv::Mat &E_best, FeatureMatches &matches) const
+int ViewGraph::refinePose(Frame &f1, Frame &f2, Pose &pose, cv::Mat &E_best, FeatureMatches &matches) const
 {
     // TODO pass min_matches as parameter
     const int min_matches = 100;
@@ -756,7 +780,7 @@ int FeatureTracker::refinePose(Frame &f1, Frame &f2, Pose &pose, cv::Mat &E_best
 }
 
 
-bool FeatureTracker::findPose(View &v1, View &v2, View &pivot,
+bool ViewGraph::findPose(View &v1, View &v2, View &pivot,
                               const std::vector<int> pivot2v2, Pose &pose,
                               cv::Mat &E_out, FeatureMatches &matches)
 {
@@ -798,7 +822,7 @@ bool FeatureTracker::findPose(View &v1, View &v2, View &pivot,
 }
 
 
-Pose FeatureTracker::findInitialPose(View &v1, View &v2,
+Pose ViewGraph::findInitialPose(View &v1, View &v2,
                                      cv::Mat &E, FeatureMatches &matches, int min_matches)
 {
     Pose pose;
@@ -878,7 +902,7 @@ Pose FeatureTracker::findInitialPose(View &v1, View &v2,
 
 
 //TODO: return the candidate view
-bool FeatureTracker::detectLoopCandidates(View &view, std::vector<View*> &candidates)
+bool ViewGraph::detectLoopCandidates(View &view, std::vector<View*> &candidates)
 {
     ORBVocabulary &orb_vocab = ORBVocabulary::instance();
     auto &vocab = orb_vocab.vocabulary();
@@ -931,7 +955,7 @@ bool FeatureTracker::detectLoopCandidates(View &view, std::vector<View*> &candid
 
 
 
-bool FeatureTracker::checkLoopConsistency(const std::vector<View*> &loop_candidates,
+bool ViewGraph::checkLoopConsistency(const std::vector<View*> &loop_candidates,
                           std::vector<View*> &consistent_candidates,
                           std::vector<ConsistentGroup> &consistent_groups,
                           std::vector<ConsistentGroup> &prev_consistent_groups,
@@ -1021,7 +1045,7 @@ bool FeatureTracker::checkLoopConsistency(const std::vector<View*> &loop_candida
 }
 
 
-bool FeatureTracker::processFrame(Frame &frame)
+bool ViewGraph::processFrame(Frame &frame)
 {
     const int graph_degree = 10;
     const int skip = 0;
@@ -1135,7 +1159,7 @@ bool FeatureTracker::processFrame(Frame &frame)
 }
 
 
-void FeatureTracker::saveViewGraph(const std::string &filename) const
+void ViewGraph::saveViewGraph(const std::string &filename) const
 {
     cv::FileStorage file(filename, cv::FileStorage::WRITE);
     
@@ -1193,7 +1217,7 @@ void rmat2quat(const Pose::Mat3 &R, Pose::Vec4 &Q)
 }
 
 
-void FeatureTracker::savePoses(const std::string &filename) const
+void ViewGraph::savePoses(const std::string &filename) const
 {
     Pose::Vec4 q;
     
@@ -1221,7 +1245,7 @@ void FeatureTracker::savePoses(const std::string &filename) const
 }
 
 
-void FeatureTracker::fixPose(int idx, Pose &new_pose)
+void ViewGraph::fixPose(int idx, Pose &new_pose)
 {
     assert(m_fixed_mask.size() == m_views.size());
     
@@ -1234,12 +1258,12 @@ void FeatureTracker::fixPose(int idx, Pose &new_pose)
     assert(m_fixed_mask.size() == m_views.size());
 }
 
-bool FeatureTracker::isPoseFixed(int idx) const
+bool ViewGraph::isPoseFixed(int idx) const
 {
     return m_fixed_mask[idx];
 }
 
-int FeatureTracker::countFixedPoses() const
+int ViewGraph::countFixedPoses() const
 {
     int resp = 0;
     for (const auto x: m_fixed_mask)
@@ -1251,7 +1275,7 @@ int FeatureTracker::countFixedPoses() const
 
 
 
-void FeatureTracker::rotAvg(int winSize)
+void ViewGraph::rotAvg(int winSize)
 {
     assert(winSize > 2);
     const long &m = m_views.size();
@@ -1385,19 +1409,19 @@ void FeatureTracker::rotAvg(int winSize)
     }
     
     // comment next line for no initialisation -- just refine
-    l1_irls::init_mst(Q, QQ, I, f);
+    // l1_irls::init_mst(Q, QQ, I, f);
 
     // make A
     l1_irls::SpMat A = l1_irls::make_A((int)num_of_vertices, f, I);
     
     const double change_th = .001;
     
-    const int l1_iters = 1500;
+    const int l1_iters = 100;
     int l1_iters_out;
     double l1_runtime;
     l1_irls::l1ra(QQ, I, A, Q, f, l1_iters, change_th, l1_iters_out, l1_runtime);
 
-    const int irls_iters = 3000;
+    const int irls_iters = 100;
     int irls_iters_out;
     double irls_runtime;
     l1_irls::Vec weights(num_of_edges);

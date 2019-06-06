@@ -1,12 +1,27 @@
-//
-//  main.cpp
-//  linfslam
-//
-//  Created by Alvaro Parra on 26/11/18.
-//  Copyright © 2018 Alvaro Parra. All rights reserved.
-//
-
-// to setup xcode see https://medium.com/@jaskaranvirdi/setting-up-opencv-and-c-development-environment-in-xcode-b6027728003
+/**
+ * This file is part of IRA.
+ *
+ * Created by Alvaro Parra on 19/3/19.
+ * Copyright © 2019 Alvaro Parra <alvaro dot parrabustos at adelaide
+ * dot edu dot au> (The University of Adelaide)
+ * For more information see <https://github.com/ajparra/IRA>
+ *
+ * This work was supported by Maptek (http://maptek.com) and the
+ * ARC Grant DP160103490.
+ *
+ * IRA is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * IRA is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with IRA. If not, see <http://www.gnu.org/licenses/>.
+ */
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -14,15 +29,14 @@
 #include <iostream>
 #include <boost/filesystem.hpp>
 
-
 #include "Frame.hpp"
 #include "ORBExtractor.hpp"
-#include "FeatureTracker.hpp"
+#include "ViewGraph.hpp"
 #include "SequenceLoader.hpp"
 #include "ViewDatabase.hpp"
 
 
-using namespace linf;
+using namespace ira;
 
 CameraParameters cam_pars;
 ORB_SLAM2::ORBextractor *orb_extractor;
@@ -93,13 +107,33 @@ void myPlotMatches(Frame &prev_frame, Frame &curr_frame, FeatureMatches &matches
     
     cv::Mat im_matches;
     cv::drawMatches(im1, kps1, im2, kps2, matches, im_matches);
-    double s=.4;
+    double s=1;
     cv::Size size(s*im_matches.cols,s*im_matches.rows);
     resize(im_matches,im_matches,size);
     cv::imshow("matches after ransac", im_matches);
     cv::waitKey(1);
 }
 
+
+
+void saveSelectedFramesIds(const std::string &filename, std::vector<int> &selected)
+{
+    Pose::Vec4 q;
+    
+    std::ofstream fs(filename);
+    if (fs.is_open())
+    {
+        for (auto id: selected)
+        {
+            fs << id << "\n";
+        }
+        fs.close();
+    }
+    else
+    {
+        std::cerr << "Unable to save selected frames." << std::endl;
+    }
+}
 
 
 int main(int argc, const char *argv[])
@@ -114,7 +148,7 @@ int main(int argc, const char *argv[])
     ;
     
     //TODO: move this flag to the arguments
-    const bool detect_loop_closure = false;
+    const bool detect_loop_closure = true;
     
     cv::CommandLineParser parser(argc, argv, keys);
     
@@ -145,7 +179,7 @@ int main(int argc, const char *argv[])
     }
     
     // ----------------------------------------------
-    // read GT
+    // read GT -- when fixing some rotations...
     // ----------------------------------------------
     std::vector<Pose::Mat3> gt_rots;
     if (gt_provided)
@@ -181,10 +215,10 @@ int main(int argc, const char *argv[])
     
     SequenceLoader loader(sequence_path, image_ext, timestamp_offset);
     
-    FeatureTracker tracker(orb_extractor->GetScaleSigmaSquares());
+    ViewGraph view_graph(orb_extractor->GetScaleSigmaSquares());
     
     // to check consistency for loop clodure
-    std::vector<FeatureTracker::ConsistentGroup> prev_consistent_groups;
+    std::vector<ViewGraph::ConsistentGroup> prev_consistent_groups;
     auto &db = ViewDatabase::instance();
     
     std::cout<< "initialising database..."<<std::endl;
@@ -193,9 +227,11 @@ int main(int argc, const char *argv[])
     
     bool is_camera_init = false; //flag for camera initialization
     
+    std::vector<int> selected_frames;
+    
     int id = 0;
     int count = 0;
-    const int sampling_step = 5; //5
+    const int sampling_step = 1; //5
     for (auto frame : loader)
     {
         if (count++%sampling_step != 0) // sampling
@@ -222,7 +258,20 @@ int main(int argc, const char *argv[])
         double frame_creation_time = (double)(toc-tic)/CLOCKS_PER_SEC;
         
         tic = clock();
-        View &view = tracker.processFrame(f);
+        
+        bool is_frame_selected = view_graph.processFrame(f);
+        
+        if (!is_frame_selected)
+        {
+            std::cout<<"skipping frame - local rad = "<<view_graph.local_rad()<<std::endl<<std::endl;
+            continue;
+        }
+        
+        selected_frames.push_back(count);
+        
+        std::cout<<"@@@@@@@@@@@ local rad = "<<view_graph.local_rad()<<std::endl<<std::endl;
+        
+        View &view = view_graph.currentView();
         
         // -------- loop closure
         bool loop_new_connections = false;
@@ -231,16 +280,15 @@ int main(int argc, const char *argv[])
         {
         
         std::vector<View*> loop_candidates;
-        if ( id%1==0 && tracker.detectLoopCandidates(view, loop_candidates) )
+        if ( id%1==0 && view_graph.detectLoopCandidates(view, loop_candidates) )
         {
             std::vector<View*> consistent_candidates;
-            std::vector<FeatureTracker::ConsistentGroup> consistent_groups;
+            std::vector<ViewGraph::ConsistentGroup> consistent_groups;
             
-            if (tracker.checkLoopConsistency(loop_candidates, consistent_candidates,
+            if (view_graph.checkLoopConsistency(loop_candidates, consistent_candidates,
                                              consistent_groups, prev_consistent_groups) )
             {
-                // add extra connections and run system wise rotation averaging!!!
-                std::cout << " * * * loop closure detected! * * *\n" << std::endl;
+                std::cout << " * * * loop closure detected * * *\n" << std::endl;
                 
                 for (View *prev_view : consistent_candidates)
                 {
@@ -250,7 +298,7 @@ int main(int argc, const char *argv[])
                     //find matches
                     double nnratio = .9;
                     std::vector<std::pair<int,int> > matched_pairs;
-                    tracker.findORBMatchesByBoW(prev_view->frame(), f,
+                    view_graph.findORBMatchesByBoW(prev_view->frame(), f,
                                                 matched_pairs, nnratio);
                     FeatureMatches matches;
                     for (auto &match_pair: matched_pairs)
@@ -261,13 +309,13 @@ int main(int argc, const char *argv[])
                     cv::Mat inlrs_mask;
                     inlrs_mask = cv::Mat();
                     cv::Mat E;
-                    Pose relPose = tracker.findRelativePose(prev_view->frame(), f,
+                    Pose relPose = view_graph.findRelativePose(prev_view->frame(), f,
                                                     matches, inlrs, inlrs_mask, E);
                     if (inlrs < min_matches)
                         continue;
                     
-                    tracker.filterMatches(matches, inlrs_mask, inlrs);
-                    tracker.refinePose(prev_view->frame(), f, relPose, E, matches);
+                    view_graph.filterMatches(matches, inlrs_mask, inlrs);
+                    view_graph.refinePose(prev_view->frame(), f, relPose, E, matches);
                     
                     //std::cout<<"  #matches after refining " << matches.size() << std::endl;
                     
@@ -277,7 +325,6 @@ int main(int argc, const char *argv[])
                     View::connect(*prev_view, view, matches, relPose);
                     std::cout << "   new connection: ( "<< prev_view->frame().id() <<", "<< view.frame().id() <<" ) " ;
                     std::cout << " # matches: "<<matches.size()<<std::endl;
-                    //tracker.plotMatches(prev_frame, curr_frame, matches) ;
                     loop_new_connections = true;
                     
                     myPlotMatches(prev_view->frame(), view.frame(), matches);
@@ -293,7 +340,6 @@ int main(int argc, const char *argv[])
         toc = clock();
         double frame_processing_time = (double)(toc-tic)/CLOCKS_PER_SEC;
         
-        
         tic = clock();
         bool add_correction = gt_provided && id%20==0;
         if (add_correction)
@@ -301,18 +347,18 @@ int main(int argc, const char *argv[])
             Pose pose_gt;
             pose_gt.setR( gt_rots[id*sampling_step] );
             
-            tracker.fixPose(id, pose_gt);
+            view_graph.fixPose(id, pose_gt);
             std::cout<<"Fixing pose for view id " << id << std::endl;
         }
         
         
         if (loop_new_connections || add_correction)
         {
-            tracker.rotAvg(5000000); //global
+            view_graph.rotAvg(5000000); //global
         }
         else
         {
-            tracker.rotAvg(50);
+            view_graph.rotAvg(50); //local
         }
         toc = clock();
         double rotavg_time = (double)(toc-tic)/CLOCKS_PER_SEC;
@@ -325,7 +371,9 @@ int main(int argc, const char *argv[])
         // tracker.loopClosure();
         
         
-        tracker.savePoses("rotavg_poses.txt");
+        view_graph.savePoses("rotavg_poses.txt");
+        saveSelectedFramesIds("rotavg_poses_ids.txt", selected_frames);
+        
         
 //        if (id%10==0)
 //        {

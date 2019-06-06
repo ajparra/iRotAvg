@@ -12,11 +12,11 @@
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
 
-namespace linf
+namespace ira
 {
     namespace Converter
     {
-        std::vector<cv::Mat> descriptorsMatToVector(const cv::Mat &descriptors);
+        std::vector<cv::Mat> xxxdescriptorsMatToVector(const cv::Mat &descriptors);
     }
 }
 

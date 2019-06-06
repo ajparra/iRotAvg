@@ -8,10 +8,10 @@
 
 #include "Converter.hpp"
 
-using namespace linf;
+using namespace ira;
 
 //// TODO: move to an static fucntion in some util class
-std::vector<cv::Mat> Converter::descriptorsMatToVector(const cv::Mat &descriptors)
+std::vector<cv::Mat> Converter::xxxdescriptorsMatToVector(const cv::Mat &descriptors)
 {
     std::vector<cv::Mat> out;
     const int n = descriptors.rows;
