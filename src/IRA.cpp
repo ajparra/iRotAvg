@@ -41,7 +41,6 @@ using namespace ira;
 CameraParameters cam_pars;
 ORB_SLAM2::ORBextractor *orb_extractor;
 
-
 void config(const std::string &filename)
 {
     // check settings file
@@ -88,14 +87,7 @@ void config(const std::string &filename)
     
     orb_extractor = new ORB_SLAM2::ORBextractor(n_features,scale_factor,
                                                 n_levels,ini_th_FAST,min_th_FAST);
-    
-    //--------------------------------------------------------------------------------------------
-    // ORB Vocabulary
-    //--------------------------------------------------------------------------------------------
-    std::string vocab_filename = settings["ORB_vocabulary"];
-    auto &orb_vocab = ORBVocabulary::instance();
-    orb_vocab.load(vocab_filename);
-}
+ }
 
 // move to some util class...
 void myPlotMatches(Frame &prev_frame, Frame &curr_frame, FeatureMatches &matches)
@@ -107,7 +99,7 @@ void myPlotMatches(Frame &prev_frame, Frame &curr_frame, FeatureMatches &matches
     
     cv::Mat im_matches;
     cv::drawMatches(im1, kps1, im2, kps2, matches, im_matches);
-    double s=1;
+    double s = 1;
     cv::Size size(s*im_matches.cols,s*im_matches.rows);
     resize(im_matches,im_matches,size);
     cv::imshow("matches after ransac", im_matches);
@@ -136,15 +128,17 @@ void saveSelectedFramesIds(const std::string &filename, std::vector<int> &select
 }
 
 
+
 int main(int argc, const char *argv[])
 {
     const cv::String keys =
-    "{help h usage ?   |      | print this message     }"
-    "{@config          |<none>| config file            }"
-    "{@sequence_path   |<none>| path to images         }"
-    "{image_ext        |.tif  | image extension        }"
-    "{timestamp_offset |25    | image's name timestamp }"
-    "{gt               |      | ground truth           }"
+    "{help h usage ?   |      | print this message            }"
+    "{@orb_vocabulary  |<none>| orb vocabulary                }"
+    "{@config          |<none>| config file                   }"
+    "{@sequence_path   |<none>| path to images                }"
+    "{image_ext        |.png  | image extension               }"
+    "{timestamp_offset |0     | image's name timestamp offset }"
+    "{gt               |      | ground truth                  }"
     ;
     
     //TODO: move this flag to the arguments
@@ -152,7 +146,7 @@ int main(int argc, const char *argv[])
     
     cv::CommandLineParser parser(argc, argv, keys);
     
-    parser.about("linfslam v0.0.2");
+    parser.about("IRA v0.0.1");
     parser.printMessage();
     if (parser.has("help"))
     {
@@ -160,10 +154,17 @@ int main(int argc, const char *argv[])
         return 0;
     }
     
-    const std::string config_filename( parser.get<cv::String>(0) );     // /Users/a1613915/dataset/maptek/LeftCam/config.yaml
-    const std::string sequence_path( parser.get<cv::String>(1) );       // /Users/a1613915/dataset/maptek/LeftCam/2-loops-clockwise/
-    const std::string image_ext( parser.get<cv::String>("image_ext") );          //".tif";
-    const int timestamp_offset = parser.get<int>("timestamp_offset");           //25; //cam144_2017-03-16-154907-1803.tif
+    const std::string vocab_filename ( parser.get<cv::String>(0) );
+    const std::string config_filename( parser.get<cv::String>(1) );
+    const std::string sequence_path  ( parser.get<cv::String>(2) );
+    const std::string image_ext( parser.get<cv::String>("image_ext") );  //".tif";
+    const int timestamp_offset = parser.get<int>("timestamp_offset");    //25; //cam144_2017-03-16-154907-1803.tif
+    
+    //--------------------------------------------------------------------------------------------
+    // ORB Vocabulary
+    //--------------------------------------------------------------------------------------------
+    auto &orb_vocab = ORBVocabulary::instance();
+    orb_vocab.load(vocab_filename);
     
     bool gt_provided = parser.has("gt");
     std::string gt_file;
@@ -202,7 +203,6 @@ int main(int argc, const char *argv[])
         }
         myfile.close();
     }
-    
     
     
     config(config_filename);
@@ -269,7 +269,7 @@ int main(int argc, const char *argv[])
         
         selected_frames.push_back(count);
         
-        std::cout<<"@@@@@@@@@@@ local rad = "<<view_graph.local_rad()<<std::endl<<std::endl;
+        //std::cout<<"local rad = "<<view_graph.local_rad()<<std::endl<<std::endl;
         
         View &view = view_graph.currentView();
         
@@ -293,7 +293,7 @@ int main(int argc, const char *argv[])
                 for (View *prev_view : consistent_candidates)
                 {
                     //const int min_matches = 50;
-                    const int min_matches = 100;
+                    const int min_matches = 150;
                     
                     //find matches
                     double nnratio = .9;
@@ -365,15 +365,12 @@ int main(int argc, const char *argv[])
         
         printf("frame %d  -- runtimes: frame creation %.3fl; frame processing %.3f, rotavg %.3f\n",
                 id, frame_creation_time, frame_processing_time, rotavg_time);
-        std::cout<<"=========================================="<<std::endl;
         // fix camera with GT
         // keep fixed cameras
         // tracker.loopClosure();
         
-        
         view_graph.savePoses("rotavg_poses.txt");
         saveSelectedFramesIds("rotavg_poses_ids.txt", selected_frames);
-        
         
 //        if (id%10==0)
 //        {

@@ -774,8 +774,7 @@ int ViewGraph::refinePose(Frame &f1, Frame &f2, Pose &pose, cv::Mat &E_best, Fea
     }
     while (iters++<max_iters);
     
-    std::cout<< "refinePose iterations " << iters <<std::endl;
-    
+    //std::cout<< "refinePose iterations " << iters <<std::endl;    
     return (int)matches.size();
 }
 
@@ -892,10 +891,8 @@ Pose ViewGraph::findInitialPose(View &v1, View &v2,
     }
     while(iters++<5);
     
-    std::cout<<"------------------------------" << std::endl;
-    std::cout<<"   local search iters  =  " << iters<<std::endl;
-    std::cout<<"   local search rad    =  " << m_local_rad<<std::endl;
-    std::cout<<"------------------------------" << std::endl;
+//    std::cout<<"   local search iters  =  " << iters<<std::endl;
+//    std::cout<<"   local search rad    =  " << m_local_rad<<std::endl;
     
     return pose;
 }
@@ -934,7 +931,6 @@ bool ViewGraph::detectLoopCandidates(View &view, std::vector<View*> &candidates)
     }
 
     // Query the database imposing the minimum score
-//    vector<KeyFrame*> vpCandidateKFs = mpKeyFrameDB->DetectLoopCandidates(mpCurrentKF, minScore);
     auto &db = ViewDatabase::instance();
     candidates = db.detectLoopCandidates(view, min_score);
 
@@ -975,7 +971,6 @@ bool ViewGraph::checkLoopConsistency(const std::vector<View*> &loop_candidates,
     
     for (View *candidate : loop_candidates) //for(size_t i=0, iend=vpCandidateKFs.size(); i<iend; i++)
     {
-        //KeyFrame* pCandidateKF = vpCandidateKFs[i];
         
         // --- Create candidate group -----------
         std::set<View*> candidate_group;
@@ -992,7 +987,6 @@ bool ViewGraph::checkLoopConsistency(const std::vector<View*> &loop_candidates,
         
         bool enough_consistent = false;
         bool consistent_for_some_group = false;
-        
         
         for(size_t g=0, iendG=prev_consistent_groups.size(); g<iendG; g++) //for(size_t iG=0, iendG=mvConsistentGroups.size(); iG<iendG; iG++)
         {
@@ -1044,13 +1038,13 @@ bool ViewGraph::checkLoopConsistency(const std::vector<View*> &loop_candidates,
     return !consistent_candidates.empty();    
 }
 
-
-bool ViewGraph::processFrame(Frame &frame)
+bool ViewGraph::processFrame(Frame &frame,
+                             const int win_size,
+                             const int min_matches)
 {
-    const int graph_degree = 10;
+    //const int graph_degree = 10;
     const int skip = 0;
     //const int min_matches = 100;
-    const int min_matches = 50;
     
     // Create View
     View *curr_view = new View(frame);
@@ -1090,7 +1084,7 @@ bool ViewGraph::processFrame(Frame &frame)
     m_views.push_back(curr_view);
     m_fixed_mask.push_back(false);
     
-    std::cout<<"local_rad = "<<local_rad()<<std::endl;
+    //std::cout<<"local_rad = "<<local_rad()<<std::endl;
     
     refinePose(prev_frame, curr_frame, relPose, E, matches);
     
@@ -1101,7 +1095,7 @@ bool ViewGraph::processFrame(Frame &frame)
     }
     
     View::connect(*prev_view, *curr_view, matches, relPose);
-    std::cout << "# matches for (" << prev_view_idx << ", " << curr_view_idx << ")  =  " << matches.size() << std::endl;
+    //std::cout << "# matches for (" << prev_view_idx << ", " << curr_view_idx << ")  =  " << matches.size() << std::endl;
     
     count_connections++;
     prev_view_idx--;
@@ -1120,14 +1114,14 @@ bool ViewGraph::processFrame(Frame &frame)
         pivot2current_map[match.queryIdx] = match.trainIdx;
     }
     
-    while (prev_view_idx>= 0 && (curr_view_idx-prev_view_idx) <= graph_degree)
+    while (prev_view_idx>= 0 && (curr_view_idx-prev_view_idx) <= win_size)
     {
         prev_view = m_views[prev_view_idx];
         Frame &prev_frame = prev_view->frame();
         
         if (!findPose(*prev_view, *curr_view, pivot, pivot2current_map, relPose, E, matches))
         {
-            std::cout << "cannot connect (" << prev_view_idx << ", " << curr_view_idx << ")  -- failed to find pose" << std::endl;
+            //std::cout << "cannot connect (" << prev_view_idx << ", " << curr_view_idx << ")  -- failed to find a pose" << std::endl;
             break;
         }
         
@@ -1290,7 +1284,7 @@ void ViewGraph::rotAvg(int winSize)
     // ---------------------------------------
     // Retrieve local connections
     // ---------------------------------------
-    l1_irls::I_t I;
+    ira::I_t I;
     std::vector< Pose::Vec4 > qq_vec;
     
     std::set<int> vertices;
@@ -1384,7 +1378,7 @@ void ViewGraph::rotAvg(int winSize)
     }
     
     // make Q
-    l1_irls::Mat Q(num_of_vertices, 4);
+    ira::Mat Q(num_of_vertices, 4);
     Pose::Vec4 q;
     for (const auto &x : vertices)
     {
@@ -1401,7 +1395,7 @@ void ViewGraph::rotAvg(int winSize)
     }
     
     // make QQ
-    l1_irls::Mat QQ(num_of_edges, 4);
+    ira::Mat QQ(num_of_edges, 4);
     for (long i=0; i<num_of_edges; i++)
     {
         const auto &q = qq_vec[i];
@@ -1409,26 +1403,26 @@ void ViewGraph::rotAvg(int winSize)
     }
     
     // comment next line for no initialisation -- just refine
-    // l1_irls::init_mst(Q, QQ, I, f);
+    // ira::init_mst(Q, QQ, I, f);
 
     // make A
-    l1_irls::SpMat A = l1_irls::make_A((int)num_of_vertices, f, I);
+    ira::SpMat A = ira::make_A((int)num_of_vertices, f, I);
     
     const double change_th = .001;
     
     const int l1_iters = 100;
     int l1_iters_out;
     double l1_runtime;
-    l1_irls::l1ra(QQ, I, A, Q, f, l1_iters, change_th, l1_iters_out, l1_runtime);
+    ira::l1ra(QQ, I, A, Q, f, l1_iters, change_th, l1_iters_out, l1_runtime);
 
     const int irls_iters = 100;
     int irls_iters_out;
     double irls_runtime;
-    l1_irls::Vec weights(num_of_edges);
-    l1_irls::Cost cost = l1_irls::Cost::Geman_McClure;
+    ira::Vec weights(num_of_edges);
+    ira::Cost cost = ira::Cost::Geman_McClure;
     double sigma = 5*M_PI/180.0;
     
-    l1_irls::irls(QQ, I, A, cost, sigma, Q, f, irls_iters, change_th,
+    ira::irls(QQ, I, A, cost, sigma, Q, f, irls_iters, change_th,
          weights, irls_iters_out, irls_runtime);
     
     // upgrade poses for the window
@@ -1438,10 +1432,10 @@ void ViewGraph::rotAvg(int winSize)
 
         Pose &pose = view->pose();
         
-        l1_irls::Quat q(Q(k,3), Q(k,0), Q(k,1), Q(k,2));
+        ira::Quat q(Q(k,3), Q(k,0), Q(k,1), Q(k,2));
         q = q.normalized();
         
-        l1_irls::Mat R = q.toRotationMatrix();
+        ira::Mat R = q.toRotationMatrix();
         R.transposeInPlace(); // opencv is row-major
         Pose::Mat3 R_cv(R.data());
         

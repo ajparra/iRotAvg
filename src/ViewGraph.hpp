@@ -47,7 +47,14 @@ public:
     m_scale_sigma_squares(scale_sigma_squares)
     {}
     
-    bool processFrame(Frame &frame);
+    // Add a frame to the view graph
+    // return true if frame is added, otherwie false
+    // win_size     --  window size of recent to try to connect with
+    // min_matches  --  min number of matches for adding a connection
+    bool processFrame(Frame &frame,
+                      const int win_size=10,
+                      const int min_matches=150);
+
     
     View &currentView()
     {
@@ -78,7 +85,7 @@ public:
     int refinePose (Frame &f1, Frame &f2, Pose &pose, cv::Mat &E, FeatureMatches &matches) const;
 
     // -----------------------------------------------------------------------------------
-    // ---- loop functions... maybe move to a different class
+    // ---- loop closure functions
     // -----------------------------------------------------------------------------------
     
     bool detectLoopCandidates(View &view, std::vector<View*> &candidates);
@@ -89,7 +96,7 @@ public:
                               std::vector<View*> &consistent_candidates,
                               std::vector<ConsistentGroup> &consistent_groups,
                               std::vector<ConsistentGroup> &prev_consistent_groups,
-                              const int covisibility_consistency_th=3);
+                              const int covisibility_consistency_th=7); //3
     
     int findORBMatchesByBoW(Frame &f1, Frame &f2,
                             std::vector<std::pair<int,int> > &matches,
@@ -123,7 +130,8 @@ private:
     
     std::vector<bool> m_fixed_mask; //mask for fixed views
     
-    double m_local_rad = 85;
+    //double m_local_rad = 85;
+    double m_local_rad = 45;
     
 };
 

@@ -1,12 +1,55 @@
-# linfslam
+# IRA
+
+Author: [Alvaro Parra](http://alvaroparra.com)
+
+Incremental Rotation Averaging (IRA) incrementally solves rotation averaging over the view graph. When a loop closure is detected, IRA 
 
 
-L-inf SLAM
+This work was supported by [Maptek](http://maptek.com) and the ARC Grant DP160103490.
 
-Created by Alvaro Parra on 19/3/19.
-Copyright © 2019 Alvaro Parra. All rights reserved.
+## Related Publication:
 
-This is an l1-irls c++ implementation
+[Álvaro Parra, Tat-Jun Chin, Anders Eriksson, Ian Reid: Visual SLAM: Why bundle adjust?, ICRA 2019](https://cs.adelaide.edu.au/~aparra/publication/parra19_icra/)
+
+
+## License
+
+IRA is released under a GPLv3 license. 
+
+For a closed-source version of RAL (e.g., for commercial purposes), please [contact the author](https://cs.adelaide.edu.au/~aparra/#contact): alvaro.parrabustos at adelaide dot edu dot au.
+
+For an academic use of IRA, please cite:
+[Álvaro Parra, Tat-Jun Chin, Anders Eriksson, Ian Reid: Visual SLAM: Why bundle adjust?, ICRA 2019](https://cs.adelaide.edu.au/~aparra/publication/parra19_icra/)
+
+
+## Dependencies
+
+- SuiteSparse
+- Eigen
+
+In Mac: 
+
+- `brew install eigen`
+- `brew install suite-sparse`
+
+In Ubuntu:
+-  `sudo apt install libeigen3-dev`
+- `sudo apt-get install libsuitesparse-dev`
+
+
+## Compilation
+
+- `mkdir build`
+- `cd build`
+- `cmake ..`
+- `make`
+
+
+An example is provided in the folder data. To test the method run:
+```
+./l1_irls ../data/ravg_input.txt
+```
+
 
 ## Dependencies
 
@@ -24,9 +67,6 @@ This is an l1-irls c++ implementation
 
 ## Compilation
 
-First download and copy the l1-irls project into the linfslam project's directory.
-Then make sure you are able to compile and execute l1_irls. Follow the l1_irls's readme for instructions.
-
 - mkdir build
 - cd build
 - cmake ..
@@ -35,7 +75,7 @@ Then make sure you are able to compile and execute l1_irls. Follow the l1_irls's
 (binary is compiled inside src)
 
 ## Config
-You can test linfslam with the maptek dataset:
+You can test linfslam with the kitti dataset:
 https://universityofadelaide.box.com/s/b9vwelbfu64f3j0m48p6aetfaywm6u3l
 
 
@@ -49,7 +89,17 @@ Edit the path for the orb vocabulary in the configuration file.
 
 
 ## Execution
-cd src
+To see usage options simply execute
+```
+./ira
+```
 
-./linfslam path/to/config.yaml path/to/sequence_path
+IRA can be executed as ORB-SLAM: 
 
+./ira orb_vocab.txt config.yaml sequence_path
+
+where
+
+- orb_vocab.txt    -- orb bocabulary as in ORB-SLAM 
+- config.yaml        -- configuration file as in ORB-SLAM 
+- sequence_path  -- directory containing the sequence frames
