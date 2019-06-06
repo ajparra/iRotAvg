@@ -114,7 +114,7 @@ int main(int argc, const char *argv[])
     ;
     
     //TODO: move this flag to the arguments
-    const bool detect_loop_closure = true;
+    const bool detect_loop_closure = false;
     
     cv::CommandLineParser parser(argc, argv, keys);
     
@@ -225,15 +225,13 @@ int main(int argc, const char *argv[])
         View &view = tracker.processFrame(f);
         
         // -------- loop closure
-        
-        //if (id%5==0)//(id%5==0)
         bool loop_new_connections = false;
         
         if (detect_loop_closure)
         {
-            
+        
         std::vector<View*> loop_candidates;
-        if (tracker.detectLoopCandidates(view, loop_candidates) )
+        if ( id%1==0 && tracker.detectLoopCandidates(view, loop_candidates) )
         {
             std::vector<View*> consistent_candidates;
             std::vector<FeatureTracker::ConsistentGroup> consistent_groups;
@@ -247,16 +245,13 @@ int main(int argc, const char *argv[])
                 for (View *prev_view : consistent_candidates)
                 {
                     //const int min_matches = 50;
-                    const int min_matches = 80;
+                    const int min_matches = 100;
                     
                     //find matches
-                    double nnratio = .8;
+                    double nnratio = .9;
                     std::vector<std::pair<int,int> > matched_pairs;
-                    int n_global_matches = tracker.findORBMatchesByBoW(prev_view->frame(), f,
+                    tracker.findORBMatchesByBoW(prev_view->frame(), f,
                                                 matched_pairs, nnratio);
-                    //std::cout<< "we have found "<< n_global_matches << " global matches using BOW"<<std::endl;
-                    
-                    
                     FeatureMatches matches;
                     for (auto &match_pair: matched_pairs)
                         matches.push_back( cv::DMatch(match_pair.first, match_pair.second, 0) );
@@ -300,7 +295,7 @@ int main(int argc, const char *argv[])
         
         
         tic = clock();
-        bool add_correction = gt_provided && id%40==0;
+        bool add_correction = gt_provided && id%20==0;
         if (add_correction)
         {
             Pose pose_gt;

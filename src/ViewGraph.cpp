@@ -1,17 +1,10 @@
-//
-//  FeatureTracker.cpp
-//  linfslam
-//
-//  Created by Alvaro Parra on 29/11/18.
-//  Copyright © 2018 Alvaro Parra. All rights reserved.
-//
 
 #include "FeatureTracker.hpp"
 #include "ViewDatabase.hpp"
 
-#include <ctime> // time_t
+#include <ctime>
 
-#define HISTO_LENGTH 30
+#define HISTO_LENGTH 30 //30
 #define TH_LOW 50
 
 #define PLOT true
@@ -24,7 +17,7 @@ bool FeatureTracker::checkDistEpipolarLine(const cv::KeyPoint &kp1,
                                            const cv::Mat &F12) const
 {
     // Epipolar line in second image l = x1'F12 = [a b c]
-    //TODO: just use matrix operations?
+    //TODO: use matrix operations
     // vector coefs = kp1.pt.x.transpose() * F12
     
     const double a = kp1.pt.x*F12.at<double>(0,0) + kp1.pt.y*F12.at<double>(1,0) + F12.at<double>(2,0);
@@ -84,6 +77,7 @@ void computeThreeMaxima(std::vector<int> *histo, const int L, int &ind1, int &in
     }
 }
 
+
 int descriptorDistance(const cv::Mat &a, const cv::Mat &b)
 {
     const int *pa = a.ptr<int32_t>();
@@ -101,7 +95,6 @@ int descriptorDistance(const cv::Mat &a, const cv::Mat &b)
     
     return dist;
 }
-
 
 
 int FeatureTracker::findORBMatchesByBoW(Frame &f1, Frame &f2,
@@ -274,12 +267,6 @@ int FeatureTracker::findORBMatchesByBoW(Frame &f1, Frame &f2,
 }
 
 
-
-//int findORBMatches(Frame &f1, Frame &f2,
-//std::vector<cv::Point2f> &prev_matched,
-//std::vector<int> &matches12,
-//const int window_size, const double nnratio)
-// Find ORB matches by ussing epipolar constraists
 int FeatureTracker::findORBMatches(Frame &f1, Frame &f2,
                                    cv::Mat F12,
                                    std::vector<std::pair<int,int> > &matched_pairs) const
@@ -581,13 +568,13 @@ int findCurr2PrevLocalMatches(Frame &curr, Frame &prev,
 }
 
 
+
 Pose FeatureTracker::findRelativePose(Frame &f1, Frame &f2,
                                       FeatureMatches &matches,
                                       int &n_cheirality, cv::Mat &mask, cv::Mat &E,
                                       double th) const
 {
     //https://docs.opencv.org/3.0-beta/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html
-    
     assert(matches.size()>4);
     
     const auto &kps1 = f1.undistortedKeypoints();
@@ -644,7 +631,7 @@ void plotMatches(Frame &prev_frame, Frame &curr_frame, FeatureMatches &matches)
     
     cv::Mat im_matches;
     cv::drawMatches(im1, kps1, im2, kps2, matches, im_matches);
-    double s=.4;
+    double s=1.0f;
     cv::Size size(s*im_matches.cols,s*im_matches.rows);
     resize(im_matches,im_matches,size);
     cv::imshow("matches after ransac", im_matches);
@@ -709,6 +696,8 @@ FeatureMatches findSIFTMatches(Frame &prev_frame, Frame &curr_frame)
 
 int FeatureTracker::refinePose(Frame &f1, Frame &f2, Pose &pose, cv::Mat &E_best, FeatureMatches &matches) const
 {
+    // TODO pass min_matches as parameter
+    const int min_matches = 100;
     if (matches.size()<5)
     {
         return (int)matches.size();
@@ -733,7 +722,7 @@ int FeatureTracker::refinePose(Frame &f1, Frame &f2, Pose &pose, cv::Mat &E_best
         cv::Mat F = K_inv_t*E_best*K_inv;
         
         matched_pairs.clear();
-        if (findORBMatches(f1, f2, F, matched_pairs) <5)
+        if (findORBMatches(f1, f2, F, matched_pairs) <.75*min_matches)
         {
             break;
         }
@@ -813,9 +802,6 @@ Pose FeatureTracker::findInitialPose(View &v1, View &v2,
                                      cv::Mat &E, FeatureMatches &matches, int min_matches)
 {
     Pose pose;
-    
-    //int rad = 85;
-    
     int n_epi_inlrs = 0;
     std::vector<int> curr2prev_map; //-1 if could not find any match or untracked
     int iters = 0;
@@ -856,8 +842,15 @@ Pose FeatureTracker::findInitialPose(View &v1, View &v2,
             const int &prev_idx = curr2prev_map[curr_idx]; // in prev
             if (prev_idx != -1)
             {
-                matches.push_back(cv::DMatch(prev_idx,curr_idx,0));
+                matches.push_back(cv::DMatch(prev_idx, curr_idx, 0));
             }
+        }
+        
+        if (matches.size()<=4)
+        {
+            m_local_rad = 1;
+            std::cout << "insufficient matches... " << std::endl;
+            break;
         }
         
         cv::Mat inlrs_mask;
@@ -1028,24 +1021,26 @@ bool FeatureTracker::checkLoopConsistency(const std::vector<View*> &loop_candida
 }
 
 
-View &FeatureTracker::processFrame(Frame &frame)
+bool FeatureTracker::processFrame(Frame &frame)
 {
-    const int graph_degree = 3;
+    const int graph_degree = 10;
     const int skip = 0;
-    const int min_matches = 100;
+    //const int min_matches = 100;
+    const int min_matches = 50;
     
     // Create View
-    // encapsulate into a makeView function
     View *curr_view = new View(frame);
-    m_views.push_back(curr_view);
-    m_fixed_mask.push_back(false);
-    
     Frame &curr_frame = curr_view->frame();
     
-    const int m = (int)m_views.size();
+    const int m = 1+(int)m_views.size();
     
     if (m <= skip+1) // we are done for the first frames
-        return *curr_view;
+    {
+        m_views.push_back(curr_view);
+        m_fixed_mask.push_back(false);
+        
+        return true;
+    }
     
     const int curr_view_idx = m-1;
     int prev_view_idx = curr_view_idx-skip-1;
@@ -1063,6 +1058,16 @@ View &FeatureTracker::processFrame(Frame &frame)
     FeatureMatches matches;
     Pose relPose = findInitialPose(*prev_view, *curr_view, E, matches, min_matches);
     
+    if (local_rad()<5.0f)
+    {
+        return false;
+    }
+    
+    m_views.push_back(curr_view);
+    m_fixed_mask.push_back(false);
+    
+    std::cout<<"local_rad = "<<local_rad()<<std::endl;
+    
     refinePose(prev_frame, curr_frame, relPose, E, matches);
     
     if (matches.size()<min_matches)
@@ -1077,7 +1082,7 @@ View &FeatureTracker::processFrame(Frame &frame)
     count_connections++;
     prev_view_idx--;
     
-    plotMatches(prev_frame, curr_frame, matches) ;
+    plotMatches(prev_frame, curr_frame, matches);
     
     
     // ----------------------------------------------
@@ -1091,7 +1096,6 @@ View &FeatureTracker::processFrame(Frame &frame)
         pivot2current_map[match.queryIdx] = match.trainIdx;
     }
     
-    
     while (prev_view_idx>= 0 && (curr_view_idx-prev_view_idx) <= graph_degree)
     {
         prev_view = m_views[prev_view_idx];
@@ -1100,7 +1104,6 @@ View &FeatureTracker::processFrame(Frame &frame)
         if (!findPose(*prev_view, *curr_view, pivot, pivot2current_map, relPose, E, matches))
         {
             std::cout << "cannot connect (" << prev_view_idx << ", " << curr_view_idx << ")  -- failed to find pose" << std::endl;
-            
             break;
         }
         
@@ -1110,7 +1113,6 @@ View &FeatureTracker::processFrame(Frame &frame)
         if (matches.size() < min_matches)
         {
             std::cout << "cannot connect (" << prev_view_idx << ", " << curr_view_idx << ")  -- insufficient matches: " << matches.size() << std::endl;
-            
             break;
         }
         
@@ -1129,88 +1131,8 @@ View &FeatureTracker::processFrame(Frame &frame)
         std::exit(-1);
     }
     
-    return *curr_view;
-    
+    return true;
 }
-
-
-
-void FeatureTracker::processFrameSift(Frame &frame)
-{
-    const int graph_degree = 3;
-    const int skip = 0;
-    const int min_matches = 35;
-    
-    const Camera &cam = Camera::instance();
-    const cv::Mat K = cv::Mat(cam.cameraParameters().intrinsic());
-    
-    // Create View
-    // encapsulate into a makeView function
-    View *curr_view = new View(frame);
-    m_views.push_back(curr_view);
-    m_fixed_mask.push_back(false);
-    
-    Frame &curr_frame = curr_view->frame();
-    
-    const int m = (int)m_views.size();
-    
-    if (m <= skip+1) // we are done for the first frames
-        return;
-    
-    const int curr_view_idx = m-1;
-    int prev_view_idx = curr_view_idx-skip-1;
-    
-    int count_connections = 0;
-    
-    //prev_visited< graph_degree
-    while ( prev_view_idx>= 0 && (count_connections < graph_degree) )
-    {
-        assert(prev_view_idx < curr_view_idx);
-        
-        // find initial matches for (prev, current)
-        View *prev_view = m_views[prev_view_idx];
-        Frame &prev_frame = prev_view->frame();
-        
-        FeatureMatches matches = findSIFTMatches(prev_frame, curr_frame);
-        
-
-        // compute fundamental matrix
-        if (matches.size() < min_matches)
-        {
-            std::cerr << "skipping connecting frame. Insufficient matches: " << matches.size() << std::endl;
-            prev_view_idx--;
-            continue;
-        }
-        
-        // find relative pose
-        Pose relPose;
-        cv::Mat inlrs_mask;
-        int n_epi_inlrs;
-        cv::Mat E;
-        relPose = findRelativePose(prev_frame, curr_frame, matches, n_epi_inlrs, inlrs_mask, E, .1);
-        if (n_epi_inlrs < min_matches)
-        {
-            std::cerr << "skipping connecting frame. Insufficient matches: " << n_epi_inlrs << std::endl;
-            prev_view_idx--;
-            continue;
-        }
-        
-        filterMatches(matches, inlrs_mask, n_epi_inlrs);
-        
-        View::connect(*prev_view, *curr_view, matches, relPose);
-        count_connections++;
-        prev_view_idx--;
-        
-        plotMatches(prev_frame, curr_frame, matches);
-    }
-    
-    if (count_connections==0)
-    {
-        std::cerr << "could not connect frame!" << std::endl;
-        std::exit(-1);
-    }
-}
-
 
 
 void FeatureTracker::saveViewGraph(const std::string &filename) const
@@ -1229,7 +1151,6 @@ void FeatureTracker::saveViewGraph(const std::string &filename) const
             if (i < j)
             {
                 const Pose &pose = matches_ptr->pose(); //get pose
-                // Write to file!
                 file <<"i"<< i;
                 file <<"j"<< j;
                 file <<"R"<< cv::Mat(pose.R());
@@ -1239,37 +1160,6 @@ void FeatureTracker::saveViewGraph(const std::string &filename) const
     }
 }
 
-
-
-//void rmat2quat(const Pose::Mat3 &R, Pose::Vec4 &Q)
-//{
-//    //double trace = R.at<double>(0,0) + R.at<double>(1,1) + R.at<double>(2,2);
-//    double trace = R(0,0) + R(1,1) + R(2,2);
-//
-//    if (trace > 0.0)
-//    {
-//        double s = sqrt(trace + 1.0);
-//        Q(3) = s * 0.5;
-//        s = 0.5 / s;
-//        Q(0) = (R(2,1) - R(1,2)) * s;
-//        Q(1) = (R(0,2) - R(2,0)) * s;
-//        Q(2) = (R(1,0) - R(0,1)) * s;
-//    }
-//    else
-//    {
-//        int i = R(0,0) < R(1,1) ? (R(1,1) < R(2,2) ? 2 : 1) : (R(0,0) < R(2,2) ? 2 : 0);
-//        int j = (i + 1) % 3;
-//        int k = (i + 2) % 3;
-//
-//        double s = sqrt(R(i, i) - R(j,j) - R(k,k) + 1.0);
-//        Q(i) = s * 0.5;
-//        s = 0.5 / s;
-//
-//        Q(3) = (R(k,j) - R(j,k)) * s;
-//        Q(j) = (R(j,i) + R(i,j)) * s;
-//        Q(k) = (R(k,i) + R(i,k)) * s;
-//    }
-//}
 
 
 void rmat2quat(const Pose::Mat3 &R, Pose::Vec4 &Q)
@@ -1534,7 +1424,6 @@ void FeatureTracker::rotAvg(int winSize)
         pose.setR(R_cv);
     }
 }
-
 
 
 bool View::connect(View &v1, View &v2, FeatureMatches matches, Pose rel_pose)
