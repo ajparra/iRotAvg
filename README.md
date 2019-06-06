@@ -2,14 +2,15 @@
 
 Author: [Alvaro Parra](http://alvaroparra.com)
 
-Incremental Rotation Averaging (IRA) incrementally solves rotation averaging over the view graph. When a loop closure is detected, IRA 
+Incremental Rotation Averaging (IRA) incrementally solves rotation averaging. IRA is the optimisation core of L-ininity SLAM presented in [Á. Parra, T.-J. Chin, A. Eriksson, I. Reid: Visual SLAM: Why bundle adjust?, ICRA 2019](https://cs.adelaide.edu.au/~aparra/publication/parra19_icra/). 
+
 
 
 This work was supported by [Maptek](http://maptek.com) and the ARC Grant DP160103490.
 
 ## Related Publication:
 
-[Álvaro Parra, Tat-Jun Chin, Anders Eriksson, Ian Reid: Visual SLAM: Why bundle adjust?, ICRA 2019](https://cs.adelaide.edu.au/~aparra/publication/parra19_icra/)
+[Á. Parra, T.-J. Chin, A. Eriksson, I. Reid: Visual SLAM: Visual SLAM: Why bundle adjust?, ICRA 2019](https://cs.adelaide.edu.au/~aparra/publication/parra19_icra/)
 
 
 ## License
@@ -19,7 +20,7 @@ IRA is released under a GPLv3 license.
 For a closed-source version of RAL (e.g., for commercial purposes), please [contact the author](https://cs.adelaide.edu.au/~aparra/#contact): alvaro.parrabustos at adelaide dot edu dot au.
 
 For an academic use of IRA, please cite:
-[Álvaro Parra, Tat-Jun Chin, Anders Eriksson, Ian Reid: Visual SLAM: Why bundle adjust?, ICRA 2019](https://cs.adelaide.edu.au/~aparra/publication/parra19_icra/)
+[Á. Parra, T.-J. Chin, A. Eriksson, I. Reid: Visual SLAM: Visual SLAM: Why bundle adjust?, ICRA 2019](https://cs.adelaide.edu.au/~aparra/publication/parra19_icra/)
 
 
 ## Dependencies
