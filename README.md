@@ -2,7 +2,7 @@
 
 Author: [Alvaro Parra](http://alvaroparra.com)
 
-Incremental Rotation Averaging (IRA) incrementally solves rotation averaging. IRA is the optimisation core of L-ininity SLAM presented in [Á. Parra, T.-J. Chin, A. Eriksson, I. Reid: Visual SLAM: Why bundle adjust?, ICRA 2019](https://cs.adelaide.edu.au/~aparra/publication/parra19_icra/). 
+Incremental Rotation Averaging (IRA) incrementally solves rotation averaging. IRA is the optimisation core of L-ininity SLAM presented in [[Á. Parra, T.-J. Chin, A. Eriksson, I. Reid: Visual SLAM: Why bundle adjust?, ICRA 2019](https://cs.adelaide.edu.au/~aparra/publication/parra19_icra/)]. 
 
 
 
@@ -25,17 +25,25 @@ For an academic use of IRA, please cite:
 
 ## Dependencies
 
-- SuiteSparse
 - Eigen
+- SuiteSparse
+- opencv
+- Boost (Filesystem)
+
 
 In Mac: 
 
 - `brew install eigen`
 - `brew install suite-sparse`
+- `brew install opencv`
+- `brew install boost`
 
 In Ubuntu:
 -  `sudo apt install libeigen3-dev`
 - `sudo apt-get install libsuitesparse-dev`
+- `sudo apt-get install libboost-all-dev`
+- `For OpenCV wise, https://www.pyimagesearch.com/2018/05/28/ubuntu-18-04-how-to-install-opencv/ provides a good guide.`
+
 
 
 ## Compilation
@@ -45,35 +53,8 @@ In Ubuntu:
 - `cmake ..`
 - `make`
 
-
-An example is provided in the folder data. To test the method run:
-```
-./l1_irls ../data/ravg_input.txt
-```
-
-
-## Dependencies
-
- - l1-irls
- - opencv3
- - Boost (Filesystem)
-
- In Mac: 
- - brew install boost
- - brew install opencv3
- 
- In ubuntu:
- - sudo apt-get install libboost-all-dev
- - For OpenCV wise, https://www.pyimagesearch.com/2018/05/28/ubuntu-18-04-how-to-install-opencv/ provides a good guide. The requirement for this code is OpenCV 3.4.
-
-## Compilation
-
-- mkdir build
-- cd build
-- cmake ..
-- make
-
 (binary is compiled inside src)
+
 
 ## Config
 You can test linfslam with the kitti dataset:
