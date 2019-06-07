@@ -10,9 +10,9 @@ This work was supported by [Maptek](http://maptek.com) and the ARC Grant DP16010
 <p align="center">
     <a href="http://maptek.com">
         <img src="maptek_logo.png" height="100" alt="Maptek">
-    </a>
+    </a> <hr> <hr>
     <a href="https://www.adelaide.edu.au">
-        <img src="uofa_logo.gif" height="100" alt="The University of Adelaide">
+        <img src="uofa_logo.gif" height="130" alt="The University of Adelaide">
     </a>
 </p>
 
