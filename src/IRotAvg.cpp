@@ -1,26 +1,26 @@
 /**
- * This file is part of IRA.
+ * This file is part of iRotAvg.
  *
  * Created by Alvaro Parra on 19/3/19.
  * Copyright © 2019 Alvaro Parra <alvaro dot parrabustos at adelaide
  * dot edu dot au> (The University of Adelaide)
- * For more information see <https://github.com/ajparra/IRA>
+ * For more information see <https://github.com/ajparra/iRotAvg>
  *
  * This work was supported by Maptek (http://maptek.com) and the
  * ARC Grant DP160103490.
  *
- * IRA is free software: you can redistribute it and/or modify
+ * iRotAvg is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * IRA is distributed in the hope that it will be useful,
+ * iRotAvg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with IRA. If not, see <http://www.gnu.org/licenses/>.
+ * along with iRotAvg. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <opencv2/core/core.hpp>
@@ -36,7 +36,7 @@
 #include "ViewDatabase.hpp"
 
 
-using namespace ira;
+using namespace irotavg;
 
 CameraParameters cam_pars;
 ORB_SLAM2::ORBextractor *orb_extractor;
@@ -132,10 +132,10 @@ void saveSelectedFramesIds(const std::string &filename, std::vector<int> &select
 int main(int argc, const char *argv[])
 {
     std::string licence_notice =
-    "IRA Copyright (C) 2019  Alvaro Parra\n"
-    "IRA comes with ABSOLUTELY NO WARRANTY.\n"
+    "iRotAvg Copyright (C) 2019  Alvaro Parra\n"
+    "iRotAvg comes with ABSOLUTELY NO WARRANTY.\n"
     "    This is free software, and you are welcome to redistribute it\n"
-    "    under certain conditions; visit https://github.com/ajparra/IRA#License for details.\n"
+    "    under certain conditions; visit https://github.com/ajparra/iRotAvg#License for details.\n"
     "\n"
     "This work was supported by Maptek (http://maptek.com) and the ARC Grant DP160103490.\n"
     "\n";

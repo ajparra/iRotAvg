@@ -1,28 +1,28 @@
 /**
- * This file is part of IRA.
+ * This file is part of iRotAvg.
  * This file is based on the file Converter.cc from ORB-SLAM2 (released under
  * the GPLv3 license, see its header below).
  *
  * Created by Alvaro Parra on 19/3/19.
  * Copyright © 2019 Alvaro Parra <alvaro dot parrabustos at adelaide
  * dot edu dot au> (The University of Adelaide)
- * For more information see <https://github.com/ajparra/IRA>
+ * For more information see <https://github.com/ajparra/iRotAvg>
  *
  * This work was supported by Maptek (http://maptek.com) and the
  * ARC Grant DP160103490.
  *
- * IRA is free software: you can redistribute it and/or modify
+ * iRotAvg is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * IRA is distributed in the hope that it will be useful,
+ * iRotAvg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with IRA. If not, see <http://www.gnu.org/licenses/>.
+ * along with iRotAvg. If not, see <http://www.gnu.org/licenses/>.
  */
 
 /**
@@ -48,7 +48,7 @@
 
 #include "Converter.hpp"
 
-using namespace ira;
+using namespace irotavg;
 
 //// TODO: move to an static fucntion in some util class
 std::vector<cv::Mat> Converter::descriptorsMatToVector(const cv::Mat &descriptors)

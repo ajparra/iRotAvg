@@ -1,27 +1,28 @@
-c #
-# This file is part of IRA.
+#
+# This file is part of iRotAvg.
 #
 # Created by Alvaro Parra on 19/3/19.
 # Copyright © 2019 Alvaro Parra <alvaro dot parrabustos at adelaide
 # dot edu dot au> (The University of Adelaide)
-# For more information see <https://github.com/ajparra/IRA>
+# For more information see <https://github.com/ajparra/iRotAvg>
 #
 # This work was supported by Maptek (http://maptek.com) and the
 # ARC Grant DP160103490.
 #
-# IRA is free software: you can redistribute it and/or modify
+# iRotAvg is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# IRA is distributed in the hope that it will be useful,
+# iRotAvg is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with IRA. If not, see <http://www.gnu.org/licenses/>.
+# along with iRotAvg. If not, see <http://www.gnu.org/licenses/>.
 #
+
 
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/ral/cmake")
 include(UpdateCacheVariable)
@@ -61,7 +62,7 @@ endif (SUITESPARSE_FOUND)
 link_directories( ${SUITESPARSE_LIBRARY_DIR_HINTS} )
 
 
-add_executable( ira IRA
+add_executable( irotavg IRotAvg
     ${PROJECT_SOURCE_DIR}/ral/l1_irls
     ${PROJECT_SOURCE_DIR}/third_party/DBoW2/DBoW2/FeatureVector
     ${PROJECT_SOURCE_DIR}/third_party/DBoW2/DBoW2/BowVector
@@ -81,7 +82,7 @@ add_executable( ira IRA
     ViewDatabase
 )
 
-target_include_directories( ira PUBLIC
+target_include_directories( irotavg PUBLIC
     ${Eigen3_INCLUDE_DIRS}
     ${SUITESPARSE_INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
@@ -89,7 +90,7 @@ target_include_directories( ira PUBLIC
     ${PROJECT_SOURCE_DIR}/ral/
 )
 
-target_link_libraries (ira
+target_link_libraries (irotavg
     Eigen3::Eigen
     ${SUITESPARSE_LIBRARIES} umfpack
     ${OpenCV_LIBRARIES}

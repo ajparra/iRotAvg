@@ -1,39 +1,40 @@
 /**
- * This file is part of IRA.
+ * This file is part of iRotAvg.
  *
  * Created by Alvaro Parra on 19/3/19.
  * Copyright © 2019 Alvaro Parra <alvaro dot parrabustos at adelaide
  * dot edu dot au> (The University of Adelaide)
- * For more information see <https://github.com/ajparra/IRA>
+ * For more information see <https://github.com/ajparra/iRotAvg>
  *
  * This work was supported by Maptek (http://maptek.com) and the
  * ARC Grant DP160103490.
  *
- * IRA is free software: you can redistribute it and/or modify
+ * iRotAvg is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * IRA is distributed in the hope that it will be useful,
+ * iRotAvg is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with IRA. If not, see <http://www.gnu.org/licenses/>.
+ * along with iRotAvg. If not, see <http://www.gnu.org/licenses/>.
  */
+
 
 #include "ViewGraph.hpp"
 #include "ViewDatabase.hpp"
 
 #include <ctime>
 
-#define HISTO_LENGTH 30 //30
+#define HISTO_LENGTH 30
 #define TH_LOW 50
 
 #define PLOT true
 
-using namespace ira;
+using namespace irotavg;
 
 
 bool ViewGraph::checkDistEpipolarLine(const cv::KeyPoint &kp1,
@@ -1284,7 +1285,7 @@ void ViewGraph::rotAvg(int winSize)
     // ---------------------------------------
     // Retrieve local connections
     // ---------------------------------------
-    ira::I_t I;
+    irotavg::I_t I;
     std::vector< Pose::Vec4 > qq_vec;
     
     std::set<int> vertices;
@@ -1378,7 +1379,7 @@ void ViewGraph::rotAvg(int winSize)
     }
     
     // make Q
-    ira::Mat Q(num_of_vertices, 4);
+    irotavg::Mat Q(num_of_vertices, 4);
     Pose::Vec4 q;
     for (const auto &x : vertices)
     {
@@ -1395,7 +1396,7 @@ void ViewGraph::rotAvg(int winSize)
     }
     
     // make QQ
-    ira::Mat QQ(num_of_edges, 4);
+    irotavg::Mat QQ(num_of_edges, 4);
     for (long i=0; i<num_of_edges; i++)
     {
         const auto &q = qq_vec[i];
@@ -1403,26 +1404,26 @@ void ViewGraph::rotAvg(int winSize)
     }
     
     // comment next line for no initialisation -- just refine
-    // ira::init_mst(Q, QQ, I, f);
+    // irotavg::init_mst(Q, QQ, I, f);
 
     // make A
-    ira::SpMat A = ira::make_A((int)num_of_vertices, f, I);
+    irotavg::SpMat A = irotavg::make_A((int)num_of_vertices, f, I);
     
     const double change_th = .001;
     
     const int l1_iters = 100;
     int l1_iters_out;
     double l1_runtime;
-    ira::l1ra(QQ, I, A, Q, f, l1_iters, change_th, l1_iters_out, l1_runtime);
+    irotavg::l1ra(QQ, I, A, Q, f, l1_iters, change_th, l1_iters_out, l1_runtime);
 
     const int irls_iters = 100;
     int irls_iters_out;
     double irls_runtime;
-    ira::Vec weights(num_of_edges);
-    ira::Cost cost = ira::Cost::Geman_McClure;
+    irotavg::Vec weights(num_of_edges);
+    irotavg::Cost cost = irotavg::Cost::Geman_McClure;
     double sigma = 5*M_PI/180.0;
     
-    ira::irls(QQ, I, A, cost, sigma, Q, f, irls_iters, change_th,
+    irotavg::irls(QQ, I, A, cost, sigma, Q, f, irls_iters, change_th,
          weights, irls_iters_out, irls_runtime);
     
     // upgrade poses for the window
@@ -1432,10 +1433,10 @@ void ViewGraph::rotAvg(int winSize)
 
         Pose &pose = view->pose();
         
-        ira::Quat q(Q(k,3), Q(k,0), Q(k,1), Q(k,2));
+        irotavg::Quat q(Q(k,3), Q(k,0), Q(k,1), Q(k,2));
         q = q.normalized();
         
-        ira::Mat R = q.toRotationMatrix();
+        irotavg::Mat R = q.toRotationMatrix();
         R.transposeInPlace(); // opencv is row-major
         Pose::Mat3 R_cv(R.data());
         
