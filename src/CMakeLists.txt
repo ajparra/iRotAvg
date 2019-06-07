@@ -1,4 +1,4 @@
-#
+c #
 # This file is part of IRA.
 #
 # Created by Alvaro Parra on 19/3/19.
@@ -23,7 +23,7 @@
 # along with IRA. If not, see <http://www.gnu.org/licenses/>.
 #
 
-list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/l1_irls/cmake")
+list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/ral/cmake")
 include(UpdateCacheVariable)
 
 
@@ -58,11 +58,11 @@ else (SUITESPARSE_FOUND)
 endif (SUITESPARSE_FOUND)
 
 
-
 link_directories( ${SUITESPARSE_LIBRARY_DIR_HINTS} )
 
-add_executable( linfslam main
-    ${PROJECT_SOURCE_DIR}/l1_irls/l1_irls
+
+add_executable( ira IRA
+    ${PROJECT_SOURCE_DIR}/ral/l1_irls
     ${PROJECT_SOURCE_DIR}/third_party/DBoW2/DBoW2/FeatureVector
     ${PROJECT_SOURCE_DIR}/third_party/DBoW2/DBoW2/BowVector
     ${PROJECT_SOURCE_DIR}/third_party/DBoW2/DBoW2/ScoringObject
@@ -70,27 +70,26 @@ add_executable( linfslam main
     ${PROJECT_SOURCE_DIR}/third_party/DBoW2/DUtils/Timestamp
     ${PROJECT_SOURCE_DIR}/third_party/DBoW2/DUtils/Random
     ORBVocabulary
-    FeatureTracker
+    ViewGraph
     SequenceLoader
     Frame
     View
     Camera
     ORBExtractor
-    SIFTExtractor
     Pose
     Converter
     ViewDatabase
 )
 
-target_include_directories( linfslam PUBLIC
+target_include_directories( ira PUBLIC
     ${Eigen3_INCLUDE_DIRS}
     ${SUITESPARSE_INCLUDE_DIRS}
     ${OpenCV_INCLUDE_DIRS}
     ${PROJECT_SOURCE_DIR}/third_party/DBoW2/DBoW2/
-    ${PROJECT_SOURCE_DIR}/l1_irls/
+    ${PROJECT_SOURCE_DIR}/ral/
 )
 
-target_link_libraries (linfslam
+target_link_libraries (ira
     Eigen3::Eigen
     ${SUITESPARSE_LIBRARIES} umfpack
     ${OpenCV_LIBRARIES}

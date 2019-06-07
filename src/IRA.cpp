@@ -131,6 +131,16 @@ void saveSelectedFramesIds(const std::string &filename, std::vector<int> &select
 
 int main(int argc, const char *argv[])
 {
+    std::string licence_notice =
+    "IRA Copyright (C) 2019  Alvaro Parra\n"
+    "IRA comes with ABSOLUTELY NO WARRANTY.\n"
+    "    This is free software, and you are welcome to redistribute it\n"
+    "    under certain conditions; visit https://github.com/ajparra/IRA#License for details.\n"
+    "\n"
+    "This work was supported by Maptek (http://maptek.com) and the ARC Grant DP160103490.\n"
+    "\n";
+
+    
     const cv::String keys =
     "{help h usage ?   |      | print this message            }"
     "{@orb_vocabulary  |<none>| orb vocabulary                }"
@@ -140,6 +150,8 @@ int main(int argc, const char *argv[])
     "{timestamp_offset |0     | image's name timestamp offset }"
     "{gt               |      | ground truth                  }"
     ;
+    
+     std::cout << licence_notice << std::endl;
     
     //TODO: move this flag to the arguments
     const bool detect_loop_closure = true;

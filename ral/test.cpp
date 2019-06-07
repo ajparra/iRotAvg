@@ -75,10 +75,10 @@ Cost parse_cost(const char *cost_name)
 int main(int argc, const char * argv[])
 {
     std::string licence_notice =
-    "RAL Copyright (C) 2019  Alvaro Parra\n"
-    "RAL comes with ABSOLUTELY NO WARRANTY.\n"
+    "IRA Copyright (C) 2019  Alvaro Parra\n"
+    "IRA comes with ABSOLUTELY NO WARRANTY.\n"
     "    This is free software, and you are welcome to redistribute it\n"
-    "    under certain conditions; visit https://github.com/ajparra/RAL#License for details.\n"
+    "    under certain conditions; visit https://github.com/ajparra/IRA#License for details.\n"
     "\n"
     "This work was supported by Maptek (http://maptek.com) and the ARC Grant DP160103490.\n"
     "\n";
