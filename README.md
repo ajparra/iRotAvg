@@ -85,7 +85,7 @@ To test IRA with the KITTI dataset:
 1. Download and uncompress the orb vocabulary file from [here](https://github.com/raulmur/ORB_SLAM2/tree/master/Vocabulary).
 1. Execute `ira` passing the corresponding paths: `./ira path/to/orb_vocab.txt path/to/config.yaml path/to/sequence/`
  
-The output is saved in two files
+ The output is saved to:
 -  `rotavg_poses_ids.txt` Contains the ids (starting in 1) of frames in the view-graph (selected frames).
 - `rotavg_poses.txt`  Contains the computed absolute poses.
 
