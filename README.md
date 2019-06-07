@@ -5,8 +5,10 @@ Author: [Alvaro Parra](http://alvaroparra.com)
 iRotAvg (incremental rotation averaging) incrementally solves rotation averaging. iRotAvg is the optimisation core of L-infinity SLAM presented in [[Á. Parra, T.-J. Chin, A. Eriksson, I. Reid: Visual SLAM: Why bundle adjust?, ICRA 2019](https://cs.adelaide.edu.au/~aparra/publication/parra19_icra/)]. 
 
 
-![Maptek](https://www.maptek.com/images/core/maptek_logo.svg)
-![The University of Adelaide](https://global.adelaide.edu.au/v/style-guide2/assets/img/social/uoa-logo.png)
+![Alt text](./controllers_brief.svg)
+<img src="https://www.maptek.com/images/core/maptek_logo.svg">
+
+![The University of Adelaide](https://www.adelaide.edu.au/brand/images/logos/logo-no-keyline.gif)
 
 This work was supported by [Maptek](http://maptek.com) and the ARC Grant DP160103490.
 
