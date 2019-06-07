@@ -83,7 +83,7 @@ endif (SUITESPARSE_FOUND)
 link_directories( ${SUITESPARSE_LIBRARY_DIR_HINTS} )
 
 
-add_executable( l1_irls main.cpp l1_irls.cpp )
+add_executable( l1_irls test.cpp l1_irls.cpp )
 
 #message(" SuiteSparse INCLUDE ${SUITESPARSE_INCLUDE_DIRS}, "
 #"building with SuiteSparse.")

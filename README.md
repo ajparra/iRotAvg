@@ -1,6 +1,6 @@
 # iRotAvg
 
-Author: [Alvaro Parra](http://alvaroparra.com)
+Author: [Álvaro Parra](http://alvaroparra.com)
 
 iRotAvg (incremental rotation averaging) incrementally solves rotation averaging. iRotAvg is the optimisation core of L-infinity SLAM presented in [[Á. Parra, T.-J. Chin, A. Eriksson, I. Reid: Visual SLAM: Why bundle adjust?, ICRA 2019](https://cs.adelaide.edu.au/~aparra/publication/parra19_icra/)]. 
 
@@ -9,7 +9,7 @@ This work was supported by [Maptek](http://maptek.com) and the ARC Grant DP16010
 
 <p align="center">
     <a href="http://maptek.com">
-        <img src="maptek_logo.png" height="90" alt="Maptek">
+        <img src="maptek_logo.png" height="100" alt="Maptek">
         </a> &nbsp; &nbsp; &nbsp;
     <a href="https://www.adelaide.edu.au">
         <img src="uofa_logo.gif" height="150" alt="The University of Adelaide">
@@ -97,4 +97,7 @@ To test iRotAvg with the KITTI dataset:
  The output is saved to:
 -  `rotavg_poses_ids.txt` Contains the ids (starting in 1) of frames in the view-graph (selected frames).
 - `rotavg_poses.txt`  Contains the computed absolute poses.
+
+
+[![Watch a demonstration in the KITTI dataset](https://img.youtube.com/vi/f87hldU41_I/maxresdefault.jpg)](https://youtu.be/f87hldU41_I)
 

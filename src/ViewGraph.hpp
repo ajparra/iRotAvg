@@ -53,7 +53,7 @@ public:
     // min_matches  --  min number of matches for adding a connection
     bool processFrame(Frame &frame,
                       const int win_size=10,
-                      const int min_matches=150);
+                      const int min_matches=100);
 
     
     View &currentView()

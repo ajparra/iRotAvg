@@ -153,8 +153,10 @@ int main(int argc, const char *argv[])
     
      std::cout << licence_notice << std::endl;
     
-    //TODO: move this flag to the arguments
     const bool detect_loop_closure = true;
+    const int vg_win_size = 4;
+    const int rotavg_win_size = 10;
+    const int vg_min_matches = 100;
     
     cv::CommandLineParser parser(argc, argv, keys);
     
@@ -271,7 +273,7 @@ int main(int argc, const char *argv[])
         
         tic = clock();
         
-        bool is_frame_selected = view_graph.processFrame(f);
+        bool is_frame_selected = view_graph.processFrame(f, vg_win_size, vg_min_matches);
         
         if (!is_frame_selected)
         {
@@ -370,29 +372,26 @@ int main(int argc, const char *argv[])
         }
         else
         {
-            view_graph.rotAvg(50); //local
+            view_graph.rotAvg(rotavg_win_size); //local
         }
         toc = clock();
         double rotavg_time = (double)(toc-tic)/CLOCKS_PER_SEC;
         
         printf("frame %d  -- runtimes: frame creation %.3fl; frame processing %.3f, rotavg %.3f\n",
                 id, frame_creation_time, frame_processing_time, rotavg_time);
-        // fix camera with GT
-        // keep fixed cameras
-        // tracker.loopClosure();
         
-        view_graph.savePoses("rotavg_poses.txt");
-        saveSelectedFramesIds("rotavg_poses_ids.txt", selected_frames);
-        
-//        if (id%10==0)
-//        {
-//            std::string vg_filename = "saved_view_graph2.yaml";
-//            tracker.saveViewGraph(vg_filename);
-//            std::cout<< "saved view-graph to "<<vg_filename<<std::endl;
-//        }
+        if (id%5==0)
+        {
+            view_graph.savePoses("rotavg_poses.txt");
+            saveSelectedFramesIds("rotavg_poses_ids.txt", selected_frames);
+        }
         
         id++;
     }
+    
+    view_graph.savePoses("rotavg_poses.txt");
+    saveSelectedFramesIds("rotavg_poses_ids.txt", selected_frames);
+
     
 //    std::string vg_filename = "/Users/a1613915/tmp/saved_view_graph.yaml";
 //    tracker.saveViewGraph(vg_filename);

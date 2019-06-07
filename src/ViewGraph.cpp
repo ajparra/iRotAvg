@@ -905,8 +905,6 @@ bool ViewGraph::detectLoopCandidates(View &view, std::vector<View*> &candidates)
     ORBVocabulary &orb_vocab = ORBVocabulary::instance();
     auto &vocab = orb_vocab.vocabulary();
     
-    //if (view.frame().id())
-    
     // Compute reference BoW similarity score
     // This is the lowest score to a connected keyframe in the covisibility graph
     // We will impose loop candidates to have a higher similarity than this
@@ -920,10 +918,6 @@ bool ViewGraph::detectLoopCandidates(View &view, std::vector<View*> &candidates)
     {
         View *v2 = c.first;
 
-        // KeyFrame* pKF = vpConnectedKeyFrames[i];
-        // if(pKF->isBad())
-        //      continue;
-        
         const auto &bow2 = v2->frame().bow();
 
         score = vocab.score(bow1, bow2);
@@ -938,10 +932,6 @@ bool ViewGraph::detectLoopCandidates(View &view, std::vector<View*> &candidates)
     // If there are no loop candidates, just add new keyframe and return false
     if(candidates.empty())
     {
-//        mpKeyFrameDB->add(mpCurrentKF);
-//        db.add(&view);
-//        mvConsistentGroups.clear();
-//        mpCurrentKF->SetErase();
         return false;
     }
     else
@@ -1043,9 +1033,7 @@ bool ViewGraph::processFrame(Frame &frame,
                              const int win_size,
                              const int min_matches)
 {
-    //const int graph_degree = 10;
     const int skip = 0;
-    //const int min_matches = 100;
     
     // Create View
     View *curr_view = new View(frame);
