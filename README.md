@@ -15,8 +15,9 @@ This work was supported by [Maptek](http://maptek.com) and the ARC Grant DP16010
 
 
 <p align="center">
-<img src="https://www.maptek.com/images/core/Maptek_Logo_OpenGraph_360x200.png" width="350" title="hover text">
+<img src="http://www.maptek.com/images/core/Maptek_Logo_OpenGraph_360x200.png" width="350" title="hover text">
 <img src="https://www.maptek.com/images/core/Maptek_Logo_OpenGraph_360x200.png" width="350" alt="accessibility text">
+<img src="https://www.adelaide.edu.au/brand/images/logos/uoa-logo-col-horiz.gif" width="350" alt="accessibility text">
 </p>
 
 
