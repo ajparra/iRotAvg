@@ -12,7 +12,13 @@ This work was supported by [Maptek](http://maptek.com) and the ARC Grant DP16010
 ![Maptek](https://www.maptek.com/images/core/maptek_logo.svg)
 <img src="https://www.maptek.com/images/core/maptek_logo.svg">
 
+![Alt text](https://raw.github.com/potherca-blog/StackOverflow/master/question.13808020.include-an-svg-hosted-on-github-in-markdown/controllers_brief.svg?sanitize=true)
+<img src="https://raw.github.com/potherca-blog/StackOverflow/master/question.13808020.include-an-svg-hosted-on-github-in-markdown/controllers_brief.svg?sanitize=true">
+
+
 ![The University of Adelaide](https://www.adelaide.edu.au/brand/images/logos/logo-no-keyline.gif)
+
+![The University of Adelaide](https://en.wikipedia.org/wiki/University_of_Adelaide#/media/File:University-of-Adelaide-Logo.svg)
 
 
 ## Related Publication:
