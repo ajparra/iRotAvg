@@ -99,5 +99,7 @@ To test iRotAvg with the KITTI dataset:
 - `rotavg_poses.txt`  Contains the computed absolute poses.
 
 
+
+### Watch a demonstration in the KITTI dataset
 [![Watch a demonstration in the KITTI dataset](https://img.youtube.com/vi/f87hldU41_I/maxresdefault.jpg)](https://youtu.be/f87hldU41_I)
 
