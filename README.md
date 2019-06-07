@@ -16,9 +16,9 @@ This work was supported by [Maptek](http://maptek.com) and the ARC Grant DP16010
 <img src="https://raw.github.com/potherca-blog/StackOverflow/master/question.13808020.include-an-svg-hosted-on-github-in-markdown/controllers_brief.svg?sanitize=true">
 
 
-![The University of Adelaide](https://www.adelaide.edu.au/brand/images/logos/logo-no-keyline.gif)
+![The University of Adelaide](https://www.adelaide.edu.au/brand/images/logos/uoa-logo-col-horiz.gif)
 
-![The University of Adelaide](https://en.wikipedia.org/wiki/University_of_Adelaide#/media/File:University-of-Adelaide-Logo.svg)
+![Maptek](http://www.maptek.com/images/core/Maptek_Logo_OpenGraph_360x200.png)
 
 
 ## Related Publication:
