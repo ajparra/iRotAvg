@@ -3,7 +3,7 @@
 
 Author: [Alvaro Parra](http://alvaroparra.com)
 
-Implementation of rotation averaging algorithms. This implementation allows to fix an arbitrary number of rotations. Instead of conventionally fixing one rotation only (usually the first rotation as the identity), fixing multiple rotations allows to:
+Implementation of rotation averaging algorithms for [IRA](https://github.com/ajparra/IRA/). This implementations allow to fix an arbitrary number of rotations. Instead of conventionally fixing one rotation only (usually the first rotation as the identity), fixing multiple rotations allows to:
 - Incorporate known absolute rotations to rotation averaging.
 - Efficiently combine multiple rotations averaging problems, e.g., addressing a (large) problem by incrementally optimising over the relative rotations or by chunks.
 
