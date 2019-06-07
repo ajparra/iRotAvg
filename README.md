@@ -2,7 +2,7 @@
 
 Author: [Alvaro Parra](http://alvaroparra.com)
 
-Incremental Rotation Averaging (IRA) incrementally solves rotation averaging. IRA is the optimisation core of L-infinity SLAM presented in [[Á. Parra, T.-J. Chin, A. Eriksson, I. Reid: Visual SLAM: Why bundle adjust?, ICRA 2019](https://cs.adelaide.edu.au/~aparra/publication/parra19_icra/)]. 
+IRA (Incremental Rotation Averaging) incrementally solves rotation averaging. IRA is the optimisation core of L-infinity SLAM presented in [[Á. Parra, T.-J. Chin, A. Eriksson, I. Reid: Visual SLAM: Why bundle adjust?, ICRA 2019](https://cs.adelaide.edu.au/~aparra/publication/parra19_icra/)]. 
 
 
 
