@@ -9,16 +9,10 @@ iRotAvg (incremental rotation averaging) incrementally solves rotation averaging
 This work was supported by [Maptek](http://maptek.com) and the ARC Grant DP160103490.
 
 
-![Maptek](https://www.maptek.com/images/core/maptek_logo.svg)
-<img src="https://www.maptek.com/images/core/maptek_logo.svg">
-
-![Alt text](https://raw.github.com/potherca-blog/StackOverflow/master/question.13808020.include-an-svg-hosted-on-github-in-markdown/controllers_brief.svg?sanitize=true)
-<img src="https://raw.github.com/potherca-blog/StackOverflow/master/question.13808020.include-an-svg-hosted-on-github-in-markdown/controllers_brief.svg?sanitize=true">
-
 
 ![The University of Adelaide](https://www.adelaide.edu.au/brand/images/logos/uoa-logo-col-horiz.gif)
 
-![Maptek](http://www.maptek.com/images/core/Maptek_Logo_OpenGraph_360x200.png)
+![Maptek](https://www.maptek.com/images/core/Maptek_Logo_OpenGraph_360x200.png)
 
 
 ## Related Publication:
