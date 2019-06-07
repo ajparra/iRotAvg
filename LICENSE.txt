@@ -1,6 +1,6 @@
-RAL is released under a GPLv3 license (see gpl-3.0.txt).
+IRA is released under a GPLv3 license (see gpl-3.0.txt).
 
-For a closed-source version of RAL (e.g.: commercial purposes), please contact the authors.
+For a closed-source version of IRA (e.g.: commercial purposes), please contact the authors.
 
-If you use RAL in an academic work, please cite the most relevant publication associated by visiting:
-https://github.com/ajparra/RAL
+If you use IRA in an academic work, please cite the most relevant publication associated by visiting:
+https://github.com/ajparra/IRA

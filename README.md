@@ -68,7 +68,7 @@ where
 
 - `orb_vocab.txt`  Orb vocabulary as in ORB-SLAM. 
 - `config.yaml`  Configuration file as in ORB-SLAM.
-- `sequence_path`  Directory containing the sequence frames.
+- `sequence_path`  Directory containing the frame sequence.
 
 To see more usage options simply execute:
 ```
