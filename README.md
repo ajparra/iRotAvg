@@ -11,7 +11,7 @@ This work was supported by [Maptek](http://maptek.com) and the ARC Grant DP16010
 
 ![The University of Adelaide](https://www.adelaide.edu.au/brand/images/logos/uoa-logo-col-horiz.gif)
 
-![Maptek](https://www.maptek.com/images/core/Maptek_Logo_OpenGraph_360x200.png)
+![Maptek](maptek_logo.svg)
 
 
 <p align="center">
