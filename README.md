@@ -19,7 +19,7 @@ IRA is released under a GPLv3 license.
 
 For a closed-source version of IRA (e.g., for commercial purposes), please [contact the author](https://cs.adelaide.edu.au/~aparra/#contact).
 
-For an academic use of IRA, please cite:
+For an academic use of IRA, please cite
 [Á. Parra, T.-J. Chin, A. Eriksson, I. Reid: Why bundle adjust?, ICRA 2019](https://cs.adelaide.edu.au/~aparra/publication/parra19_icra/).
 
 
@@ -86,6 +86,6 @@ To test IRA with the KITTI dataset:
 1. Execute `ira` passing the corresponding paths: `./ira path/to/orb_vocab.txt path/to/config.yaml path/to/sequence/`
  
 The output is saved in two files
--  `rotavg_poses_ids.txt` Contains the ids (starting in 1) of frames in the view graph (selected frames).
+-  `rotavg_poses_ids.txt` Contains the ids (starting in 1) of frames in the view-graph (selected frames).
 - `rotavg_poses.txt`  Contains the computed absolute poses.
 

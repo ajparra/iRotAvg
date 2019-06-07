@@ -21,7 +21,7 @@ IRA is released under a GPLv3 license.
 
 For a closed-source version of IRA (e.g., for commercial purposes), please [contact the author](https://cs.adelaide.edu.au/~aparra/#contact): alvaro.parrabustos at adelaide dot edu dot au.
 
-For an academic use of IRA, please cite:
+For an academic use of IRA, please cite
 [Á. Parra, T.-J. Chin, A. Eriksson, I. Reid: Visual SLAM: Why bundle adjust?, ICRA 2019](https://cs.adelaide.edu.au/~aparra/publication/parra19_icra/)
 
 
