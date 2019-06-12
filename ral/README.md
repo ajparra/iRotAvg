@@ -8,7 +8,7 @@ Implementation of rotation averaging algorithms for [iRotAvg](https://github.com
 - Efficiently combine multiple rotations averaging problems, e.g., addressing a (large) problem by incrementally optimising over the relative rotations or by chunks.
 
 
-This work was supported by [Maptek](http://maptek.com) and the ARC Grant DP160103490.
+This work was supported by [Maptek](http://maptek.com) and the ARC Linkage Project LP140100946.
 
 <p align="center">
 <a href="http://maptek.com">
