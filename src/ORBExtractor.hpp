@@ -9,7 +9,7 @@
  * For more information see <https://github.com/ajparra/iRotAvg>
  *
  * This work was supported by Maptek (http://maptek.com) and the
- * ARC Grant DP160103490.
+ * ARC Linkage Project LP140100946.
  *
  * iRotAvg is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

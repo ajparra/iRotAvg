@@ -7,7 +7,7 @@
  * For more information see <https://github.com/ajparra/iRotAvg>
  *
  * This work was supported by Maptek (http://maptek.com) and the
- * ARC Grant DP160103490.
+ * ARC Linkage Project LP140100946.
  *
  * iRotAvg is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -135,9 +135,11 @@ int main(int argc, const char *argv[])
     "iRotAvg Copyright (C) 2019  Alvaro Parra\n"
     "iRotAvg comes with ABSOLUTELY NO WARRANTY.\n"
     "    This is free software, and you are welcome to redistribute it\n"
-    "    under certain conditions; visit https://github.com/ajparra/iRotAvg#License for details.\n"
+    "    under certain conditions; visit\n"
+    "    https://github.com/ajparra/iRotAvg#License for details.\n"
     "\n"
-    "This work was supported by Maptek (http://maptek.com) and the ARC Grant DP160103490.\n"
+    "This work was supported by Maptek (http://maptek.com) and the \n"
+    "ARC Linkage Project LP140100946..\n"
     "\n";
 
     
@@ -392,10 +394,5 @@ int main(int argc, const char *argv[])
     view_graph.savePoses("rotavg_poses.txt");
     saveSelectedFramesIds("rotavg_poses_ids.txt", selected_frames);
 
-    
-//    std::string vg_filename = "/Users/a1613915/tmp/saved_view_graph.yaml";
-//    tracker.saveViewGraph(vg_filename);
-//    std::cout<< "saved view-graph to "<<vg_filename<<std::endl;
-    
     return 0;
 }

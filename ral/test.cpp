@@ -7,7 +7,7 @@
  * For more information see <https://github.com/ajparra/iRotAvg>
  *
  * This work was supported by Maptek (http://maptek.com) and the
- * ARC Grant DP160103490.
+ * ARC Linkage Project LP140100946.
  *
  * iRotAvg is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -78,15 +78,17 @@ int main(int argc, const char * argv[])
     "iRotAvg Copyright (C) 2019  Alvaro Parra\n"
     "iRotAvg comes with ABSOLUTELY NO WARRANTY.\n"
     "    This is free software, and you are welcome to redistribute it\n"
-    "    under certain conditions; visit https://github.com/ajparra/iRotAvg#License for details.\n"
+    "    under certain conditions; visit\n"
+    "    https://github.com/ajparra/iRotAvg#License for details.\n"
     "\n"
-    "This work was supported by Maptek (http://maptek.com) and the ARC Grant DP160103490.\n"
+    "This work was supported by Maptek (http://maptek.com) and the \n"
+    "ARC Linkage Project LP140100946..\n"
     "\n";
     
     std::string usage =
     "Usage:\n"
     "\n"
-    "l1_irls input_file [output_file [cost [sigma [irls_iters [l1_iters [change_th]]]]]]\n"
+    "test input_file [output_file [cost [sigma [irls_iters [l1_iters [change_th]]]]]]\n"
     "\n"
     "  input_file      --  input file with format:\n"
     "      m n f\n"
