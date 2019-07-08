@@ -33,3 +33,7 @@ test/
 *.exe
 *.out
 *.app
+
+
+cmake-build-*/
+rotavg_poses*.txt
