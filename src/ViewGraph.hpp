@@ -110,7 +110,9 @@ public:
     void filterMatches(FeatureMatches &matches, const cv::Mat &inlrs_mask, int n_epi_inlrs) const;
     
     double local_rad() const { return m_local_rad; }
-    
+
+    const std::vector<View*> views() const;
+
 private:
     
     bool checkDistEpipolarLine(const cv::KeyPoint &kp1,

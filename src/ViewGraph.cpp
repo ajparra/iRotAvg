@@ -1431,6 +1431,11 @@ void ViewGraph::rotAvg(int winSize)
     }
 }
 
+const std::vector<View *> ViewGraph::views() const
+{
+    return m_views;
+}
+
 
 bool View::connect(View &v1, View &v2, FeatureMatches matches, Pose rel_pose)
 {
