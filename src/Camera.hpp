@@ -42,7 +42,7 @@ class CameraParameters
 {
 public:
     typedef cv::Matx33d Intrinsic_type;
-    typedef cv::Vec4d Dist_type;
+    typedef cv::Vec<double, 5> Dist_type;
     
     CameraParameters():
     m_intrinsic( Intrinsic_type::eye() ),

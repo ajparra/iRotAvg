@@ -72,6 +72,7 @@ void config(const std::string &filename)
     dist_coef(1) = settings["Camera.k2"];
     dist_coef(2) = settings["Camera.p1"];
     dist_coef(3) = settings["Camera.p2"];
+    dist_coef(4) = settings["Camera.k3"];
 
 
     cam_pars = CameraParameters(K, dist_coef);
