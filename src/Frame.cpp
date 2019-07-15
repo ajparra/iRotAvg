@@ -60,6 +60,7 @@ std::string type2str(int type) {
 void Frame::findFeatures()
 {
     cv::Mat image = getImage();
+    cv::imshow("current", image);
 
     if (USE_ORB)
     {

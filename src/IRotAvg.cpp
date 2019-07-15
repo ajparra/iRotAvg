@@ -264,6 +264,10 @@ int main(int argc, const char *argv[])
     int id = 0;
     int count = 0;
     const int sampling_step = 1; //5
+
+    double sum_frame_processing_time = 0;
+    int sample_count = 0;
+
     for (auto frame : loader)
     {
         if (count++ % sampling_step != 0) // sampling
@@ -372,6 +376,8 @@ int main(int argc, const char *argv[])
 
         toc = clock();
         double frame_processing_time = (double) (toc - tic) / CLOCKS_PER_SEC;
+        sum_frame_processing_time += frame_processing_time;
+        sample_count++;
 
         tic = clock();
         bool add_correction = gt_provided && id % 20 == 0;
@@ -398,6 +404,7 @@ int main(int argc, const char *argv[])
 
         printf("frame %d  -- runtimes: frame creation %.3fl; frame processing %.3f, rotavg %.3f\n",
                id, frame_creation_time, frame_processing_time, rotavg_time);
+        printf("ave: %.3f", sum_frame_processing_time / (double)sample_count);
 
         if (id % 5 == 0)
         {

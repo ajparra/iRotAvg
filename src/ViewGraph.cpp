@@ -1089,7 +1089,7 @@ bool ViewGraph::processFrame(Frame &frame,
     count_connections++;
     prev_view_idx--;
     
-    plotMatches(prev_frame, curr_frame, matches);
+    //plotMatches(prev_frame, curr_frame, matches);
     
     
     // ----------------------------------------------
@@ -1129,7 +1129,7 @@ bool ViewGraph::processFrame(Frame &frame,
         count_connections++;
         prev_view_idx--;
         
-        plotMatches(prev_frame, curr_frame, matches);
+        //plotMatches(prev_frame, curr_frame, matches);
     }
     
     if (count_connections==0)
