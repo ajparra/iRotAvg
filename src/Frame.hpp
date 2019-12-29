@@ -51,10 +51,11 @@ class Frame
     
 public:
     
-    Frame(int id, const std::string path, ORB_SLAM2::ORBextractor &orbExtractor) :
+    Frame(int id, const std::string path, double timeStamp, ORB_SLAM2::ORBextractor &orbExtractor) :
     USE_ORB(USE_ORF_FLAG),   //
     m_id(id),
     m_path(path),
+    m_time_stamp(timeStamp),
     m_orb_extractor(orbExtractor)
     {
         findFeatures();
@@ -69,7 +70,9 @@ public:
     cv::Mat &descriptors() { return m_descriptors; }
     
     int id() const { return m_id; }
-    
+
+    const double getTimeStamp() const;
+
     cv::Mat getImage();
     
     
@@ -96,6 +99,7 @@ private:
     const bool USE_ORB;
     
     const int m_id;
+    const double m_time_stamp;
     const std::string m_path;
     ORB_SLAM2::ORBextractor &m_orb_extractor;
     //static cv::Ptr<cv::FeatureDetector> detector (cv::ORB::create() );

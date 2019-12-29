@@ -64,6 +64,8 @@ public:
     void saveViewGraph(const std::string &filename) const;
     
     void savePoses(const std::string &filename) const;
+
+    void savePosesForGedorinku(const std::string &filename, const std::vector<int> &selected_frames) const;
     
     // refine rotations by using rotation averaging
     void rotAvg(const int winSize);

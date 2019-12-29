@@ -1227,6 +1227,41 @@ void ViewGraph::savePoses(const std::string &filename) const
     }
 }
 
+void ViewGraph::savePosesForGedorinku(const std::string &filename, const std::vector<int> &selected_frames) const
+{
+    std::ofstream f(filename);
+    if (!f.is_open())
+    {
+        std::cerr << "failed to save poses: " << filename << std::endl;
+    }
+
+    int idx = 0;
+    int nextId = 0;
+    for (auto view: m_views)
+    {
+        if (view->frame().id() != nextId)
+        {
+            continue;
+        }
+
+        const auto &pose = view->pose();
+        const auto time = view->frame().getTimeStamp();
+        const auto &R = pose.R();
+        const auto &t = pose.t();
+
+        f << setprecision(9) << time << " "
+          << R(0, 0) << " " << R(0, 1) << " " << R(0, 2) << " " << t(0)
+          << " "
+          << R(1, 0) << " " << R(1, 1) << " " << R(1, 2) << " " << t(1)
+          << " "
+          << R(2, 0) << " " << R(2, 1) << " " << R(2, 2) << " " << t(2)
+          << std::endl;
+
+        nextId = selected_frames[idx];
+        idx++;
+    }
+}
+
 
 void ViewGraph::fixPose(int idx, Pose &new_pose)
 {

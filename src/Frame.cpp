@@ -273,3 +273,8 @@ void Frame::computeBoW()
         vocab.transform(descriptors, m_bow, m_bow_features, ORB_VOCAB_LEVELS);
     }
 }
+
+const double Frame::getTimeStamp() const
+{
+    return m_time_stamp;
+}

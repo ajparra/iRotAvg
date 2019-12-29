@@ -145,6 +145,25 @@ void saveSelectedFramesIds(const std::string &filename, std::vector<int> &select
     }
 }
 
+std::vector<double> loadTimeStamps(const std::string &filename)
+{
+    ifstream s(filename);
+    if (!s.is_open())
+    {
+        std::cerr << "failed to open time stamp file: " << filename << std::endl;
+        exit(1);
+    }
+
+    std::vector<double> res;
+    double t;
+    while (s >> t)
+    {
+        res.emplace_back(t);
+    }
+
+    return res;
+}
+
 
 int main(int argc, const char *argv[])
 {
@@ -188,9 +207,12 @@ int main(int argc, const char *argv[])
 
     const std::string vocab_filename(parser.get<cv::String>(0));
     const std::string config_filename(parser.get<cv::String>(1));
-    const std::string sequence_path(parser.get<cv::String>(2));
+    const std::string sequence_path = parser.get<cv::String>(2) + "/image_0";
+    const std::string time_stamp_filename = parser.get<cv::String>(2) + "/times.txt";
     const std::string image_ext(parser.get<cv::String>("image_ext"));  //".tif";
     const int timestamp_offset = parser.get<int>("timestamp_offset");    //25; //cam144_2017-03-16-154907-1803.tif
+
+    const auto time_stamps = loadTimeStamps(time_stamp_filename);
 
     //--------------------------------------------------------------------------------------------
     // ORB Vocabulary
@@ -288,7 +310,7 @@ int main(int argc, const char *argv[])
         }
 
         // Create a Frame object
-        Frame f(id, impath, *orb_extractor);
+        Frame f(id, impath, time_stamps[id], *orb_extractor);
 
         toc = clock();
         double frame_creation_time = (double) (toc - tic) / CLOCKS_PER_SEC;
@@ -410,6 +432,7 @@ int main(int argc, const char *argv[])
         {
             view_graph.savePoses("rotavg_poses.txt");
             saveSelectedFramesIds("rotavg_poses_ids.txt", selected_frames);
+            view_graph.savePosesForGedorinku("gedorinku_poses.txt", selected_frames);
         }
 
         showRotation(view.pose());
@@ -420,6 +443,7 @@ int main(int argc, const char *argv[])
 
     view_graph.savePoses("rotavg_poses.txt");
     saveSelectedFramesIds("rotavg_poses_ids.txt", selected_frames);
+    view_graph.savePosesForGedorinku("gedorinku_poses.txt", selected_frames);
 
     return 0;
 }
