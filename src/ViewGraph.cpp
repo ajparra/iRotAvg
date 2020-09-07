@@ -136,7 +136,7 @@ int ViewGraph::findORBMatchesByBoW(Frame &f1, Frame &f2,
     const auto &bow_features2 = f2.bow_features();
     
     const int n1 = (int)keypoints1.size();
-    //const int n2 = (int)keypoints2.size();
+    const int n2 = (int)keypoints2.size();
     
     //const vector<MapPoint*> vpMapPointsKF = pKF->GetMapPointMatches();
     
@@ -144,6 +144,7 @@ int ViewGraph::findORBMatchesByBoW(Frame &f1, Frame &f2,
     
     //vpMapPointMatches = vector<MapPoint*>(F.N,static_cast<MapPoint*>(NULL));
     std::vector<int> matches12(n1,-1);
+    std::vector<int> matched2(n2,-1);
     //std::vector<bool> matched2(n2,false);
 
     //const DBoW2::FeatureVector &vFeatVecKF = pKF->mFeatVec;
@@ -197,7 +198,7 @@ int ViewGraph::findORBMatchesByBoW(Frame &f1, Frame &f2,
                     //TODO: check this condition!!!
 //                    if(vpMapPointMatches[idx2])
 //                        continue;
-                    if (matches12[idx2]>-1)
+                    if (matched2[idx2]>-1)
                     {
                         continue;
                     }
@@ -226,6 +227,7 @@ int ViewGraph::findORBMatchesByBoW(Frame &f1, Frame &f2,
                     {
                         //vpMapPointMatches[bestIdxF]=pMP;
                         matches12[idx1] = best_idx2;
+                        matched2[best_idx2] = 2;
                         //const cv::KeyPoint &kp = pKF->mvKeysUn[realIdxKF];
                         
                         if(check_orientation)
@@ -237,7 +239,8 @@ int ViewGraph::findORBMatchesByBoW(Frame &f1, Frame &f2,
                             if(bin == HISTO_LENGTH)
                                 bin = 0;
                             assert(bin>=0 && bin<HISTO_LENGTH);
-                            rotHist[bin].push_back(best_idx2);
+                            rotHist[bin].push_back(idx1);
+//                            rotHist[bin].push_back(best_idx2);
                         }
                         n_matches++;
                     }
